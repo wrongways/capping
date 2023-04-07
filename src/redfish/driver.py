@@ -13,6 +13,11 @@ CREDS1 = {
     "password": "password",
 }
 
+CREDS1 = {
+    "user": "admin",
+    "password": "password",
+}
+
 
 
 

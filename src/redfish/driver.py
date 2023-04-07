@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+
 from redfish import redfish_client
 
 CREDS = {
@@ -8,5 +10,8 @@ CREDS = {
 
 
 
-
-cnx = redfish_client(**CREDS)
+if __name__ == "__main__":
+    cnx = redfish_client(**CREDS, default_prefix="/redfish/v1/")
+    cnx.login(**CREDS, auth="session")
+    resp = cnx.get("/redfish/v1/systems/1", None)
+    print(resp)

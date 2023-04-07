@@ -16,6 +16,5 @@ if rc.returncode != 0:
     sys.exit(f"{command} failed: {rc.stderr.decode()}")
 
 sensor_list = rc.stdout.decode()
-for line in sensor_list:
-    print(line)
+print(sensor_list)
 

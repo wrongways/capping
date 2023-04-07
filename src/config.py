@@ -20,12 +20,16 @@ class Config:
 
     @property
     def bmc(self):
-        return self.config['bmc']
+        return self.config["bmc"]
 
     @property
     def bmc_user(self):
-        return self.bmc['user']
+        return self.bmc["user"]
 
     @property
     def bmc_password(self):
-        return self.bmc['password']
+        return self.bmc["password"]
+
+    @property
+    def bmc_name(self):
+        return self.bmc["name"]

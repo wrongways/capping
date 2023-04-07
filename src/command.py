@@ -1,17 +1,21 @@
-from pickle import TRUE
 from subprocess import Popen
 import shlex
 import subprocess
 import sys
 
-from .config import Config
-auth_string = f"-h {Config.bmc_name} -u {Config.bmc_user} -p {Config.bmc_password}"
+from config import Config
+conf = Config()
+auth_string = f"-h {conf.bmc_name} -u {conf.bmc_user} -p {conf.bmc_password}"
 
-command = (f"/usr/sbin/ipmi-sensors " + auth_string)
+command = f"/usr/sbin/ipmi-sensors " + auth_string
+print(command)
+
 command_tokens = shlex.split(command)
 rc = subprocess.run(command_tokens, capture_output=True)
 if rc.returncode != 0:
-    sys.exit(f"{command} failed: {rc.stderr}")
+    sys.exit(f"{command} failed: {rc.stderr.decode()}")
 
-print(rc.stdout)
+sensor_list = rc.stdout.decode()
+for line in sensor_list:
+    print(line)
 

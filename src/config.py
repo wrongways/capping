@@ -8,8 +8,11 @@ import sys
 class Config:
     """Transforms the config file into easy to use attributes"""
 
-    def __init__(self, config_filename) -> None:
-        config_path = Path(config_filename)
+    def __init__(self) -> None:
+        my_path = Path(__file__)
+        my_dir = my_path.parent
+        config_path = Path(my_dir, "../config/config.ini")
+
         if not (config_path.exists() and config_path.is_file()):
             bel = "\07"
             sys.exit(f"File {config_path} does not exist{bel}")

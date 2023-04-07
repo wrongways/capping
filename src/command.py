@@ -2,6 +2,8 @@ from subprocess import Popen
 import shlex
 import subprocess
 import sys
+from io import BytesIO
+import pandas as pd
 
 from config import Config
 conf = Config()
@@ -15,6 +17,6 @@ rc = subprocess.run(command_tokens, capture_output=True)
 if rc.returncode != 0:
     sys.exit(f"{command} failed: {rc.stderr.decode()}")
 
-sensor_list = rc.stdout.decode()
-print(sensor_list)
 
+df = pd.read_csv(BytesIO(rc.stdout), sep="|", index_col="ID", encoding="utf8")
+print(df)

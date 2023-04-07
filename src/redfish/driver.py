@@ -8,6 +8,10 @@ CREDS = {
     "password": "password",
 }
 
+creds0 = CREDS
+creds1 = CREDS
+creds1['base_url'] = None
+
 
 
 if __name__ == "__main__":

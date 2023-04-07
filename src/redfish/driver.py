@@ -19,5 +19,5 @@ CREDS1 = {
 if __name__ == "__main__":
     cnx = redfish_client(**CREDS0, default_prefix="/redfish/v1/")
     cnx.login(**CREDS1, auth="session")
-    resp = cnx.get("/redfish/v1/systems/1", None)
+    resp = cnx.get("/redfish/v1/systems/1", None, **CREDS1)
     print(resp)

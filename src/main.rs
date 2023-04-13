@@ -19,5 +19,6 @@ fn main() {
     };
     println!("BMC hostname: {}", config.bmc.hostname);
 
-    capping::read_sensors(&config);
+    let power_reading = capping::read_sensors(&config);
+    println!("Current instant power: {}", power_reading.instant);
 }

@@ -28,8 +28,19 @@ pub struct Config {
     pub ipmitool: IPMITOOL,
 }
 
+pub struct PowerReading {
+    pub instant: i32,
+    pub avg: i32,
+}
 
-pub fn read_sensors(config: &Config) {
+impl PowerReading {
+    pub fn new(instant: i32, avg: i32) -> Self {
+        Self{instant, avg}
+    }
+}
+
+
+pub fn read_sensors(config: &Config) -> PowerReading {
     let ipmi_args = format!("-H {} -U {} -P {} {}",
         &config.bmc.hostname, &config.bmc.user,
         &config.bmc.password, &config.ipmitool.power_sensors);
@@ -57,6 +68,5 @@ pub fn read_sensors(config: &Config) {
     let avg_power = line2[1].parse::<i32>().unwrap();
 
     println!("Instant power: {instant_power:04}, Average power: {avg_power:04}");
-
+    PowerReading::new(instant_power, avg_power)
 }
-

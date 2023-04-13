@@ -1,5 +1,5 @@
 [bmc]
-name = bmc-oahu10000
-user = admin
-password = password
+name = bmc
+user = bmc_user
+password = bmc_password
 

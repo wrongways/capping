@@ -1,13 +1,11 @@
 use std:: {
     process:: {
         Command,
-    }
+    },
+    // fs,
 };
 
-
 use serde::{Serialize, Deserialize};
-
-
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct BMC {
@@ -20,7 +18,10 @@ pub struct BMC {
 pub struct IPMITOOL {
     path: String,
     power_sensors: String,
+    get_limit: String,
+    set_limit: String,
 }
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
     pub bmc: BMC,
@@ -42,5 +43,8 @@ pub fn read_sensors(config: &Config) {
         .output()
         .expect("ipmitool power collection failed to run");
 
-    println!("{:?}", power_csv)
+    let power_csv = String::from_utf8_lossy(&power_csv.stdout);
+    let (line1, line2) = power_csv.split_once('\n').expect("Failed to parse power readings");
+    println!("{line1}, {line2}")
 }
+

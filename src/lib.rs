@@ -45,6 +45,18 @@ pub fn read_sensors(config: &Config) {
 
     let power_csv = String::from_utf8_lossy(&power_csv.stdout);
     let (line1, line2) = power_csv.split_once('\n').expect("Failed to parse power readings");
-    println!("{line1}, {line2}")
+    println!("{line1}, {line2}");
+    assert!(line1.contains("Watts"), "power line1 missing Watts");
+    assert!(line2.contains("Watts"), "power line2 missing Watts");
+    assert!(line2.contains("AVG"), "power line2 missing AVG");
+
+    let line1: Vec<&str> = line1.split(',').collect();
+    let line2: Vec<&str> = line2.split(',').collect();
+
+    let instant_power = line1[1].parse::<i32>().unwrap();
+    let avg_power = line2[1].parse::<i32>().unwrap();
+
+    println!("Instant power: {instant_power:04}, Average power: {avg_power:04}");
+
 }
 

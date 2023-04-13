@@ -37,8 +37,10 @@ pub fn read_sensors(config: &Config) {
 
     let ipmi_args: Vec<&str> = ipmi_args.split_whitespace().collect();
     println!("{:?}", ipmi_args);
-    let _power_csv = Command::new(&config.ipmitool.path)
+    let power_csv = Command::new(&config.ipmitool.path)
         .args(ipmi_args)
         .output()
         .expect("ipmitool power collection failed to run");
+
+    println!("{:?}", power_csv)
 }

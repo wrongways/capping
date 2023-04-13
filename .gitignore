@@ -1,6 +1,7 @@
-config.ini
+config/config.toml
 __pycache__/
 .mypy_cache/
 bin/
 include/
 lib/
+target/

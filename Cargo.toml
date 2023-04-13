@@ -1,0 +1,8 @@
+[package]
+name = "capping"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde = { version = "1.0.160", features = ["derive", "serde_derive"] }
+toml = "0.7.3"

@@ -1,0 +1,5 @@
+[bmc]
+name = bmc-oahu10000
+user = admin
+password = password
+

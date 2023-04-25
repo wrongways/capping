@@ -5,11 +5,11 @@ use clap::Parser;
 #[derive(Parser)]
 #[command(author, version, about, long_about=None)]
 struct CLI {
-    #[arg(long, short)]
+    #[arg(long, short='H')]
     hostname: String,
-    #[arg(long, short)]
+    #[arg(long, short='U')]
     username: String,
-    #[arg(long, short)]
+    #[arg(long, short='P')]
     password: String,
 }
 

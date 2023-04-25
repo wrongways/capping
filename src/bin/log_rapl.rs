@@ -1,5 +1,5 @@
 use glob::glob;
-use log::trace;
+use log::{trace, debug};
 use simple_logger;
 use std::fs;
 use std::path::PathBuf;
@@ -41,21 +41,21 @@ fn read_energy(filename: &PathBuf) -> u64 {
 fn main() {
     simple_logger::SimpleLogger::new().env().init().unwrap();
     let rapl_glob = format!("{RAPL_DIR}{RAPL_CORE_GLOB}");
-    trace!("{rapl_glob}");
     let mut rapl_files = glob(&rapl_glob).expect("Failed to read rapl glob");
     let mut energy_readings = Vec::<RAPL_Data>::new();
 
-    for _ in 0..7 {
+    for i in 0..5 {
         for rapl_file in &mut rapl_files {
             let f = &rapl_file.unwrap();
             #[allow(non_snake_case)]
             let domain = f.parent().unwrap();
+            debug!("Pushing new energy reading");
             energy_readings.push(RAPL_Data::new(domain.into(), read_energy(&f)));
         }
         sleep(Duration::from_secs(1));
     }
 
     for datapoint in energy_readings {
-        trace!("Datapoint: {:?}", datapoint);
+        trace!("Datapoint: {:?}", &datapoint);
     }
 }

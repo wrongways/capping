@@ -71,7 +71,9 @@ impl BMC {
         let result = self.run_ipmi_command(&IPMI_READ_POWER_CMD);
 
         let power_csv = String::from_utf8_lossy(&result.stdout);
+        let power_error = String::from_utf8_lossy(&result.stderr);
         trace!("Output from read_sensors: {power_csv}");
+        trace!("Error from read_sensors: {power_error}");
         let (line1, line2) = power_csv
             .split_once('\n')
             .expect("Failed to parse power readings");

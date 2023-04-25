@@ -30,8 +30,9 @@ impl RAPL_Data {
 }
 
 fn read_energy(filename: &PathBuf) -> u64 {
-    let energy_reading: u64 = fs::read_to_string(filename).unwrap().parse().unwrap();
+    let energy_reading: String = fs::read_to_string(filename).unwrap();
     trace!("read_energy({:?} => {}", filename, energy_reading);
+    let energy_reading: u64 = energy_reading.parse().unwrap();
     energy_reading
 }
 

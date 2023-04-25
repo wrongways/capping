@@ -25,7 +25,11 @@ fn main() {
         args.password,
     );
     bmc.working();
-    bmc.read_sensors();
+
+    for _ in 0..20 {
+        bmc.read_sensors();
+    }
+
     for sensor in &bmc.power_readings {
         info!("{:?}", sensor);
     }

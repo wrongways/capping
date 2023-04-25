@@ -1,7 +1,6 @@
 use chrono::{self, DateTime, Local};
+use log::{info, trace};
 use std::process::{Command, Output};
-use log::{info, trace, warn, error};
-
 
 const IPMI_PATH: &str = "/usr/bin/ipmitool";
 // const IPMI_READ_POWER_CMD: &str = "dcmi power reading";
@@ -16,7 +15,6 @@ pub struct BMC {
     password: String,
     pub power_readings: Vec<PowerReading>,
 }
-
 
 #[derive(Debug)]
 pub struct PowerReading {
@@ -90,6 +88,7 @@ impl BMC {
 
         info!("Instant power: {instant_power:04}, Average power: {avg_power:04}");
         PowerReading::new(instant_power, avg_power);
-        self.power_readings.push(PowerReading::new(instant_power, avg_power));
+        self.power_readings
+            .push(PowerReading::new(instant_power, avg_power));
     }
 }

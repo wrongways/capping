@@ -1,32 +1,27 @@
-// use std::{
-//     // io::{self, Write, Read, Result},
-//     fs,
-// };
-//
 use capping::bmc;
-use capping::redfish;
-//
-// static CONFIG_FILENAME: &str = "config/config.toml";
+use capping::firestarter;
+use clap::Parser;
 
-
+#[derive(Parser)]
+#[command(author, version, about, long_about=None)]
+struct CLI {
+    hostname: String,
+    username: String,
+    password: String,
+}
 
 fn main() {
-    // let path = env::current_exe().expect("Couldn't get cwd");
-    // path.push(CONFIG_FILENAME);
-    // println!("Looking for config in: {}", &path.display());
+    let args = CLI::parse();
 
-
-//     let config: capping::Config = {
-//         let config_text = fs::read_to_string(CONFIG_FILENAME).expect("Failed to read config file");
-//         toml::from_str(&config_text).expect("Failed to parse config to toml")
-//     };
-//     println!("BMC hostname: {}", config.bmc.hostname);
-//
-//     let power_reading = capping::read_sensors(&config);
-//     println!("Current instant power: {}", power_reading.instant);
-
-    let bmc = bmc::BMC::new(String::from("bmc"), String::from("wrongways"), String::from("pass"));
+    let mut bmc = bmc::BMC::new(
+        args.hostname,
+        args.username,
+        args.password,
+    );
     bmc.working();
-
-    redfish::redfish();
+    bmc.read_sensors();
+    for sensor in &bmc.power_readings {
+        println!("{:?}", sensor);
+    }
+    firestarter::firestarter();
 }

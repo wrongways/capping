@@ -1,2 +1,2 @@
 pub mod bmc;
-pub mod redfish;
+pub mod firestarter;

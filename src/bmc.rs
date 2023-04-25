@@ -56,7 +56,8 @@ impl BMC {
         println!("Sensor command: {ipmi_args}");
 
         let ipmi_args: Vec<&str> = ipmi_args.split_whitespace().collect();
-        let result = Command::new("command")
+        println!("impi_args: {:?}", ipmi_args);
+        let result = Command::new(IPMI_PATH)
             .args(ipmi_args)
             .output()
             .expect("Failed to run impi command");
@@ -65,9 +66,7 @@ impl BMC {
     }
 
     pub fn read_sensors(&mut self) {
-        let sensor_command = format!("{} {}", IPMI_PATH, IPMI_READ_POWER_CMD);
-        println!("Sensor command: {sensor_command}");
-        let result = self.run_ipmi_command(&sensor_command);
+        let result = self.run_ipmi_command(&IPMI_READ_POWER_CMD);
 
         let power_csv = String::from_utf8_lossy(&result.stdout);
         println!("Output from read_sensors: {power_csv}");

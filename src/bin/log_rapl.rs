@@ -30,7 +30,7 @@ impl RAPL_Data {
     }
 }
 
-fn read_energy(filename: &PathBuf) -> u64 {
+fn read_energy(filename: &OsString) -> u64 {
     let energy_reading: String = fs::read_to_string(filename).unwrap();
     trace!("read_energy({:?} => {}", filename, energy_reading);
     let energy_reading: u64 = u64::from_str(energy_reading.trim()).unwrap();
@@ -41,16 +41,20 @@ fn read_energy(filename: &PathBuf) -> u64 {
 fn main() {
     simple_logger::SimpleLogger::new().env().init().unwrap();
     let rapl_glob = format!("{RAPL_DIR}{RAPL_CORE_GLOB}");
-    let mut rapl_files = glob(&rapl_glob).expect("Failed to read rapl glob");
+    let rapl_paths = glob(&rapl_glob).expect("Failed to read rapl glob");
+    let mut rapl_files = Vec::<OsString>::new();
+    for p in rapl_paths {
+        match p {
+            Ok(path) => rapl_files.push(path.into_os_string()),
+            Err(why) => debug!("Titsup on path: {why:?}"),
+        }
+    }
     let mut energy_readings = Vec::<RAPL_Data>::new();
 
     for i in 0..5 {
-        for rapl_file in &mut rapl_files {
-            let f = &rapl_file.unwrap();
-            #[allow(non_snake_case)]
-            let domain = f.parent().unwrap();
-            debug!("Pushing new energy reading");
-            energy_readings.push(RAPL_Data::new(domain.into(), read_energy(&f)));
+        for rapl_file in &rapl_files {
+            debug!("Pushing new energy reading: {i}");
+            energy_readings.push(RAPL_Data::new(rapl_file.clone(), read_energy(rapl_file)));
         }
         sleep(Duration::from_secs(1));
     }

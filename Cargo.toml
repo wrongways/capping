@@ -13,4 +13,6 @@ chrono = "0.4.24"
 clap = { version = "4.2.4", features = ["derive"] }
 derive = "1.0.0"
 features = "0.10.0"
+log = "0.4.17"
+simple_logger = "4.1.0"
 toml = "0.7.3"

@@ -1,12 +1,13 @@
 use chrono::{self, DateTime, Local};
 use std::process::{Command, Output};
+use log::{info, trace, warn, error};
 
 
 const IPMI_PATH: &str = "/usr/bin/ipmitool";
 // const IPMI_READ_POWER_CMD: &str = "dcmi power reading";
 const IPMI_READ_POWER_CMD: &str = "-c sdr type 0x09";
-const IPMI_GET_POWER_CAP_CMD: &str = "";
-const IPMI_SET_POWER_CAP_CMD: &str = "";
+// const IPMI_GET_POWER_CAP_CMD: &str = "";
+// const IPMI_SET_POWER_CAP_CMD: &str = "";
 
 #[derive(Debug)]
 pub struct BMC {
@@ -45,7 +46,7 @@ impl BMC {
         }
     }
     pub fn working(&self) {
-        println!("It's working user: {}", self.username);
+        trace!("It's working user: {}", self.username);
     }
 
     fn run_ipmi_command(&self, bmc_command: &str) -> Output {
@@ -54,10 +55,10 @@ impl BMC {
             self.hostname, self.username, self.password, bmc_command
         );
 
-        println!("Sensor command: {ipmi_args}");
+        trace!("Sensor command: {ipmi_args}");
 
         let ipmi_args: Vec<&str> = ipmi_args.split_whitespace().collect();
-        println!("impi_args: {:?}", ipmi_args);
+        trace!("impi_args: {:?}", ipmi_args);
         let result = Command::new(IPMI_PATH)
             .args(ipmi_args)
             .output()
@@ -70,11 +71,11 @@ impl BMC {
         let result = self.run_ipmi_command(&IPMI_READ_POWER_CMD);
 
         let power_csv = String::from_utf8_lossy(&result.stdout);
-        println!("Output from read_sensors: {power_csv}");
+        trace!("Output from read_sensors: {power_csv}");
         let (line1, line2) = power_csv
             .split_once('\n')
             .expect("Failed to parse power readings");
-        println!("{line1}, {line2}");
+        trace!("{line1}, {line2}");
         assert!(line1.contains("Watts"), "power line1 missing Watts");
         assert!(line2.contains("Watts"), "power line2 missing Watts");
         assert!(line2.contains("AVG"), "power line2 missing AVG");
@@ -85,7 +86,7 @@ impl BMC {
         let instant_power = line1[1].parse::<u32>().unwrap();
         let avg_power = line2[1].parse::<u32>().unwrap();
 
-        println!("Instant power: {instant_power:04}, Average power: {avg_power:04}");
+        info!("Instant power: {instant_power:04}, Average power: {avg_power:04}");
         PowerReading::new(instant_power, avg_power);
         self.power_readings.push(PowerReading::new(instant_power, avg_power));
     }

@@ -3,7 +3,8 @@ use std::process::{Command, Output};
 
 
 const IPMI_PATH: &str = "/usr/bin/ipmitool";
-const IPMI_READ_POWER_CMD: &str = "dcmi power reading";
+// const IPMI_READ_POWER_CMD: &str = "dcmi power reading";
+const IPMI_READ_POWER_CMD: &str = "-c sdr type 0x09";
 const IPMI_GET_POWER_CAP_CMD: &str = "";
 const IPMI_SET_POWER_CAP_CMD: &str = "";
 

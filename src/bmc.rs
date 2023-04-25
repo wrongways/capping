@@ -2,8 +2,8 @@ use chrono::{self, DateTime, Local};
 use std::process::{Command, Output};
 
 
-const IPMI_PATH: &str = "/usr/sbin/ipmitool";
-const IPMI_READ_POWER_CMD: &str = "";
+const IPMI_PATH: &str = "/usr/bin/ipmitool";
+const IPMI_READ_POWER_CMD: &str = "dcmi power reading";
 const IPMI_GET_POWER_CAP_CMD: &str = "";
 const IPMI_SET_POWER_CAP_CMD: &str = "";
 
@@ -53,7 +53,7 @@ impl BMC {
             self.hostname, self.username, self.password, bmc_command
         );
 
-        // TODO: Add debug log here
+        println!("Sensor command: {ipmi_args}");
 
         let ipmi_args: Vec<&str> = ipmi_args.split_whitespace().collect();
         let result = Command::new("command")

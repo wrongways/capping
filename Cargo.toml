@@ -2,6 +2,10 @@
 name = "capping"
 version = "0.1.0"
 edition = "2021"
+authors =["jez"]
+description = "Tool for testing CPU capping latencies"
+readme = "README.adoc"
+repository = "git@github.com:wrongways/capping"
 
 [dependencies]
 async-std = "1.12.0"

@@ -50,13 +50,13 @@ fn main() {
         for rapl_file in &mut rapl_files {
             let f = &rapl_file.unwrap();
             #[allow(non_snake_case)]
-            let domain = f.file_name().unwrap();
+            let domain = f.parent().unwrap();
             energy_readings.push(RAPL_Data::new(domain.into(), read_energy(&f)));
         }
         sleep(Duration::from_secs(1));
     }
 
     for datapoint in energy_readings {
-        trace!("{:?}", datapoint);
+        trace!("Datapoint: {:?}", datapoint);
     }
 }

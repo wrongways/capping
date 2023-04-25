@@ -1,9 +1,8 @@
 use glob::glob;
 use log::trace;
 use simple_logger;
-use std::fs::File;
+use std::fs;
 use std::path::PathBuf;
-use std::io::Read;
 use chrono::{self, DateTime, Local};
 use std::ffi::OsString;
 use std::thread::sleep;
@@ -17,11 +16,11 @@ const RAPL_CORE_GLOB: &str = "intel-rapl:?/intel-rapl:?:0/energy_uj";
 struct RAPL_Data {
     pub timestamp: DateTime<Local>,
     pub domain: OsString,
-    pub energy: usize,
+    pub energy: u64,
 }
 
 impl RAPL_Data {
-    fn new(domain: OsString, energy: usize) -> Self {
+    fn new(domain: OsString, energy: u64) -> Self {
         Self {
             timestamp: Local::now(),
             domain,
@@ -30,13 +29,10 @@ impl RAPL_Data {
     }
 }
 
-fn read_energy(filename: &PathBuf) -> usize {
-    let mut s = String::new();
-    let energy_string = File::open(filename)
-        .expect("Failed to open RAPL file")
-        .read_to_string(&mut s)
-        .expect("Failed to read RAPL string");
-    energy_string.into()
+fn read_energy(filename: &PathBuf) -> u64 {
+    let energy_reading: u64 = fs::read_to_string(filename).unwrap().parse().unwrap();
+    trace!("read_energy({:?} => {}", filename, energy_reading);
+    energy_reading
 }
 
 fn main() {

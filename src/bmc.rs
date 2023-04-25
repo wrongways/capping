@@ -66,9 +66,11 @@ impl BMC {
 
     pub fn read_sensors(&mut self) {
         let sensor_command = format!("{} {}", IPMI_PATH, IPMI_READ_POWER_CMD);
+        println!("Sensor command: {sensor_command}");
         let result = self.run_ipmi_command(&sensor_command);
 
         let power_csv = String::from_utf8_lossy(&result.stdout);
+        println!("Output from read_sensors: {power_csv}");
         let (line1, line2) = power_csv
             .split_once('\n')
             .expect("Failed to parse power readings");

@@ -7,6 +7,7 @@ use chrono::{self, DateTime, Local};
 use std::ffi::OsString;
 use std::thread::sleep;
 use std::time::Duration;
+use std::str::FromStr;
 
 const RAPL_DIR: &str = "/sys/devices/virtual/powercap/intel-rapl/";
 const RAPL_CORE_GLOB: &str = "intel-rapl:?/intel-rapl:?:0/energy_uj";
@@ -32,7 +33,8 @@ impl RAPL_Data {
 fn read_energy(filename: &PathBuf) -> u64 {
     let energy_reading: String = fs::read_to_string(filename).unwrap();
     trace!("read_energy({:?} => {}", filename, energy_reading);
-    let energy_reading: u64 = energy_reading.parse().unwrap();
+    let energy_reading: u64 = u64::from_str(energy_reading.trim()).unwrap();
+    trace!("read_energy({:?} => {}", filename, energy_reading);
     energy_reading
 }
 

@@ -34,8 +34,9 @@ impl RAPL_Data {
 
 fn read_energy(filename: &str) -> u64 {
     let energy_reading: String = fs::read_to_string(filename).unwrap();
+    let energy_reading = energy_reading.trim();
     trace!("read_energy string({:?} => {}", filename, energy_reading);
-    let energy_reading: u64 = u64::from_str(energy_reading.trim()).unwrap();
+    let energy_reading: u64 = u64::from_str(energy_reading).unwrap();
     trace!("read_energy u64({:?} => {}", filename, energy_reading);
     energy_reading
 }

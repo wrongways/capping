@@ -3,14 +3,11 @@ use log::{trace, debug, error};
 use simple_logger;
 use std::fs::{self, OpenOptions};
 use chrono::{self, DateTime, Local};
-use std::ffi::OsString;
 use std::thread::sleep;
 use std::time::Duration;
 use std::str::FromStr;
 use std::string::ToString;
-use std::borrow::Cow;
 use std::io::Write;
-use std::convert::AsRef;
 
 const RAPL_DIR: &str = "/sys/devices/virtual/powercap/intel-rapl/";
 const RAPL_CORE_GLOB: &str = "intel-rapl:?/intel-rapl:?:0/energy_uj";
@@ -45,6 +42,7 @@ fn read_energy(filename: &str) -> u64 {
 fn write_stats(stats: &Vec<RAPL_Data>) {
     let mut outfile = OpenOptions::new()
         .append(true)
+        .create(true)
         .open(STATS_FILE)
         .unwrap();
 

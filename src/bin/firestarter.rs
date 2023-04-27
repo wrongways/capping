@@ -22,6 +22,7 @@ impl Firestarter {
             load_period_us = 1000 * runtime_secs;
         }
 
+        trace!("Making a firestarter");
         // If n_threads == 0, use 1 thread per core given by the "CPU(s):" field from lscpu.
         let mut n_threads = n_threads;
         if n_threads == 0 {
@@ -64,5 +65,7 @@ pub fn firestarter() {
 }
 
 pub fn main() {
+    println!("FIRESTARTER");
+    trace!("* * *  F I R E S T A R T E R  * * *");
     firestarter();
 }

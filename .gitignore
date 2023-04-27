@@ -4,3 +4,4 @@ __pycache__/
 include/
 lib/
 target/
+*.csv

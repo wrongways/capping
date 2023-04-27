@@ -25,7 +25,10 @@ impl Firestarter {
         // If n_threads == 0, use 1 thread per core given by the "CPU(s):" field from lscpu.
         let mut n_threads = n_threads;
         if n_threads == 0 {
-            let command: &str = r#"lscpu | awk -F: '/^CPU\(s\):/ {gsub(\s+, "", $2); print $2}'"#;
+            let lscpu = "/usr/bin/lscpu";
+            let awk = "/usr/bin/awk -F:";
+            let awk_cmd = r#"'/^CPU\(s\):/ {print $2}'"#;
+            let command = format!("{lscpu} | {awk} {awk_cmd}");
             let cpu_count = Command::new(command)
                 .output()
                 .expect("Failed to find cpu count")

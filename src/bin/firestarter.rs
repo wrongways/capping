@@ -1,5 +1,5 @@
 use log::{info, trace};
-use std::process::Command;
+use std::process::{Command, Stdio};
 use std::time::Duration;
 use std::fmt::{self, Display, Formatter};
 use simple_logger;
@@ -28,21 +28,28 @@ impl Firestarter {
         let mut n_threads = n_threads;
         if n_threads == 0 {
             let lscpu = "/usr/bin/lscpu";
-            let awk = "/usr/bin/awk -F:";
+            let awk = "/usr/bin/awk";
+            let awk_fs = "-F:";
             let awk_cmd = r#"'/^CPU\(s\):/ {print $2}'"#;
-            let command = format!("{lscpu} | {awk} {awk_cmd}");
-            trace!("running: {command}");
-            let mut cpu_count = Command::new(command);
-            let status = cpu_count.status();
-            trace!("Status from commmand: {status:?}");
-            let cpu_count = cpu_count
-                .output()
-                .expect("Failed to find cpu count")
-                .stdout;
-            trace!("Number of CPUs: {:?}", &cpu_count);
-            let cpu_count = String::from_utf8_lossy(&cpu_count)
+
+            let lscpu_child = Command::new(lscpu)
+                .stdout(Stdio::piped())
+                .spawn()
+                .unwrap();
+
+            let awk_child = Command::new(awk)
+                .arg(awk_fs)
+                .arg(awk_cmd)
+                .stdin(Stdio::from(lscpu_child.stdout.unwrap()))
+                .stdout(Stdio::piped())
+                .spawn()
+                .unwrap();
+
+            let output = awk_child.wait_with_output().unwrap();
+            let cpu_count = String::from_utf8_lossy(&output.stdout)
                 .parse::<u32>()
-                .expect("Failed to parse CPU count");
+                .expect("Failed to parse cpu_count");
+
             trace!("Number of CPUs: {:?}", &cpu_count);
             n_threads = cpu_count;
 

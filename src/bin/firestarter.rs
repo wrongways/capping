@@ -30,7 +30,7 @@ impl Firestarter {
             let lscpu = "/usr/bin/lscpu";
             let awk = "/usr/bin/awk";
             let awk_fs = "-F:";
-            let awk_cmd = r#"'/^CPU\(s\):/ {print $2}'"#;
+            let awk_cmd = r#"/^CPU\(s\):/ {print $2}"#;
 
             let lscpu_child = Command::new(lscpu)
                 .stdout(Stdio::piped())

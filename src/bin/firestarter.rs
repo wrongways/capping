@@ -55,3 +55,7 @@ pub fn firestarter() {
     let f = Firestarter::new("/bin/firestarter", Duration::from_secs(120), 99, 100, 0);
     info!("firestarter: {f}");
 }
+
+pub fn main() {
+    firestarter();
+}

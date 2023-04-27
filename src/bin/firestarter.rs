@@ -8,56 +8,32 @@ use simple_logger;
 #[derive(Debug, Clone)]
 struct Firestarter {
     path: String,
-    pub runtime_secs: u64,
+    pub runtime_secs: u32,
     pub load_pct: u32,
     pub load_period_us: u64,
     pub n_threads: u32,
 }
 
 impl Firestarter {
-    pub fn new(path: &str, runtime: Duration, load_pct: u32, load_period_us: u64, n_threads: u32) -> Self {
+    pub fn new(path: &str, runtime_secs: u32, load_pct: u32, load_period_us: u64, n_threads: u32) -> Self {
         assert!(load_pct > 0 && load_pct <= 100);
-        let mut load_period_us = load_period_us;
-        let runtime_secs = runtime.as_secs();
-        if (load_pct == 100) && (load_period_us == 0) {
-            load_period_us = 1000 * runtime_secs;
-        }
-
-        trace!("Making a firestarter");
-        // If n_threads == 0, use 1 thread per core given by the "CPU(s):" field from lscpu.
-        let mut n_threads = n_threads;
-        if n_threads == 0 {
-            let lscpu = "/usr/bin/lscpu";
-            let awk = "/usr/bin/awk";
-            let awk_fs = "-F:";
-            let awk_cmd = r#"/^CPU\(s\):/ {print $2}"#;
-
-            let lscpu_child = Command::new(lscpu)
-                .stdout(Stdio::piped())
-                .spawn()
-                .unwrap();
-
-            let awk_child = Command::new(awk)
-                .arg(awk_fs)
-                .arg(awk_cmd)
-                .stdin(Stdio::from(lscpu_child.stdout.unwrap()))
-                .stdout(Stdio::piped())
-                .spawn()
-                .unwrap();
-
-            let output = awk_child.wait_with_output().unwrap();
-            let cpu_count = String::from_utf8_lossy(&output.stdout);
-            let cpu_count = cpu_count.trim();
-            trace!("String CPU count: {cpu_count}");
-            let cpu_count = cpu_count.parse::<u32>().expect("Failed to parse cpu_count");
-            trace!("u32 CPU count   : {cpu_count}");
-            n_threads = cpu_count;
-
-        }
-        trace!("{} --timeout {} --load {} --period {} --threads {}",
-        path, runtime_secs, load_pct, load_period_us, n_threads);
-
         Self {path: String::from(path), runtime_secs, load_pct, load_period_us, n_threads}
+    }
+
+    pub fn launch(&self) {
+        let firestarter = Command::new(&self.path)
+            .arg("--timeout")
+            .arg(self.runtime_secs.to_string())
+            .arg("--load")
+            .arg(self.load_pct.to_string())
+            .arg("--period")
+            .arg(self.load_period_us.to_string())
+            .arg("--threads")
+            .arg(self.n_threads.to_string())
+            .spawn()
+            .unwrap();
+
+        let _ = firestarter.wait_with_output().expect("firestarter failed");
     }
 }
 
@@ -68,11 +44,10 @@ impl Display for Firestarter {
     }
 }
 pub fn firestarter() {
-    let f = Firestarter::new("/home_nfs/wainj/local/bin/firestarter", Duration::from_secs(5), 99, 100, 0);
+    let f = Firestarter::new("/home_nfs/wainj/local/bin/firestarter", 5, 99, 100, 0);
     info!("firestarter: {f}");
     trace!("Launching firestarter");
-    let firestarter = Command::new(f.to_string()).spawn().unwrap();
-    let _ = firestarter.wait_with_output();
+    f.launch();
     trace!("Exited firestarter");
 }
 

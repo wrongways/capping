@@ -71,14 +71,14 @@ pub fn firestarter() {
     let f = Firestarter::new("/home_nfs/wainj/local/bin/firestarter", Duration::from_secs(5), 99, 100, 0);
     info!("firestarter: {f}");
     trace!("Launching firestarter");
-    let _ = Command::new(f.to_string()).spawn();
+    let firestarter = Command::new(f.to_string()).spawn().unwrap();
+    let _ = firestarter.wait_with_output();
     trace!("Exited firestarter");
 }
 
 pub fn main() {
     simple_logger::SimpleLogger::new().env().init().unwrap();
 
-    println!("FIRESTARTER");
     trace!("* * *  F I R E S T A R T E R  * * *");
     firestarter();
 }

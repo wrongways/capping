@@ -68,8 +68,11 @@ impl Display for Firestarter {
     }
 }
 pub fn firestarter() {
-    let f = Firestarter::new("/bin/firestarter", Duration::from_secs(120), 99, 100, 0);
+    let f = Firestarter::new("/home_nfs/wainj/local/bin/firestarter", Duration::from_secs(5), 99, 100, 0);
     info!("firestarter: {f}");
+    trace!("Launching firestarter");
+    let _ = Command::new(f.to_string()).spawn();
+    trace!("Exited firestarter");
 }
 
 pub fn main() {

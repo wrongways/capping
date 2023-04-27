@@ -1,5 +1,4 @@
 use capping::bmc;
-use capping::firestarter;
 use clap::Parser;
 use log::info;
 use simple_logger;
@@ -29,5 +28,4 @@ fn main() {
     for sensor in &bmc.power_readings {
         info!("{:?}", sensor);
     }
-    firestarter::firestarter();
 }

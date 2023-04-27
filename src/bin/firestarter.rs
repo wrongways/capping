@@ -29,7 +29,11 @@ impl Firestarter {
             let awk = "/usr/bin/awk -F:";
             let awk_cmd = r#"'/^CPU\(s\):/ {print $2}'"#;
             let command = format!("{lscpu} | {awk} {awk_cmd}");
-            let cpu_count = Command::new(command)
+            trace!("running: {command}");
+            let mut cpu_count = Command::new(command);
+            let status = cpu_count.status();
+            trace!("Status from commmand: {status:?}");
+            let cpu_count = cpu_count
                 .output()
                 .expect("Failed to find cpu count")
                 .stdout;

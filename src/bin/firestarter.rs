@@ -46,11 +46,11 @@ impl Firestarter {
                 .unwrap();
 
             let output = awk_child.wait_with_output().unwrap();
-            let cpu_count = String::from_utf8_lossy(&output.stdout)
-                .parse::<u32>()
-                .expect("Failed to parse cpu_count");
-
-            trace!("Number of CPUs: {:?}", &cpu_count);
+            let cpu_count = String::from_utf8_lossy(&output.stdout);
+            let cpu_count = cpu_count.trim();
+            trace!("String CPU count: {cpu_count}");
+            let cpu_count = cpu_count.parse::<u32>().expect("Failed to parse cpu_count");
+            trace!("u32 CPU count   : {cpu_count}");
             n_threads = cpu_count;
 
         }

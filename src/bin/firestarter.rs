@@ -2,6 +2,7 @@ use log::{info, trace};
 use std::process::Command;
 use std::time::Duration;
 use std::fmt::{self, Display, Formatter};
+use simple_logger;
 
 
 #[derive(Debug, Clone)]
@@ -65,6 +66,8 @@ pub fn firestarter() {
 }
 
 pub fn main() {
+    simple_logger::SimpleLogger::new().env().init().unwrap();
+
     println!("FIRESTARTER");
     trace!("* * *  F I R E S T A R T E R  * * *");
     firestarter();

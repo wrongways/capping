@@ -1,6 +1,5 @@
 use log::{info, trace};
-use std::process::{Command, Stdio};
-use std::time::Duration;
+use std::process::Command;
 use std::fmt::{self, Display, Formatter};
 use simple_logger;
 
@@ -22,6 +21,7 @@ impl Firestarter {
 
     pub fn launch(&self) {
         let firestarter = Command::new(&self.path)
+            .arg("--quiet")
             .arg("--timeout")
             .arg(self.runtime_secs.to_string())
             .arg("--load")
@@ -44,7 +44,7 @@ impl Display for Firestarter {
     }
 }
 pub fn firestarter() {
-    let f = Firestarter::new("/home_nfs/wainj/local/bin/firestarter", 5, 99, 100, 0);
+    let f = Firestarter::new("/home_nfs/wainj/local/bin/firestarter", 5, 50, 100_000, 5);
     info!("firestarter: {f}");
     trace!("Launching firestarter");
     f.launch();

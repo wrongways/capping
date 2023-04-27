@@ -1,11 +1,9 @@
-use log::{info, trace};
 use std::process::Command;
 use std::fmt::{self, Display, Formatter};
-use simple_logger;
 
 
 #[derive(Debug, Clone)]
-struct Firestarter {
+pub struct Firestarter {
     path: String,
     pub runtime_secs: u32,
     pub load_pct: u32,
@@ -42,18 +40,4 @@ impl Display for Firestarter {
         write!(f, "{} --timeout {} --load {} --period {} --threads {}",
         self.path, self.runtime_secs, self.load_pct, self.load_period_us, self.n_threads)
     }
-}
-pub fn firestarter() {
-    let f = Firestarter::new("/home_nfs/wainj/local/bin/firestarter", 5, 50, 100_000, 5);
-    info!("firestarter: {f}");
-    trace!("Launching firestarter");
-    f.launch();
-    trace!("Exited firestarter");
-}
-
-pub fn main() {
-    simple_logger::SimpleLogger::new().env().init().unwrap();
-
-    trace!("* * *  F I R E S T A R T E R  * * *");
-    firestarter();
 }

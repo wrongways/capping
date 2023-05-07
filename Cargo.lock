@@ -90,6 +90,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9b1ce199063694f33ffb7dd4e0ee620741495c32833cde5aa08f02a0bf96f0c8"
 
 [[package]]
+name = "capping"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "clap",
+ "glob",
+ "lazy_static",
+ "log",
+ "simple_logger",
+ "sysconf",
+]
+
+[[package]]
 name = "cc"
 version = "1.0.79"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -580,19 +593,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "372950940a5f07bf38dbe211d7283c9e6d7327df53794992d293e534c733d09b"
 dependencies = [
  "time-core",
-]
-
-[[package]]
-name = "trial2"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "clap",
- "glob",
- "lazy_static",
- "log",
- "simple_logger",
- "sysconf",
 ]
 
 [[package]]

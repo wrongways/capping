@@ -13,10 +13,6 @@ use std::time::Duration;
 
 const LOG_FILENAME: &str = "driver_log";
 
-// Let firestarter run an extra 2 seconds
-// to ensure that we get a response from the
-// bmc
-
 pub struct Trial {
     bmc: BMC,
     // rapl: RAPL,
@@ -110,7 +106,6 @@ impl Trial {
             Firestarter::new(self.total_runtime_secs, load_pct, load_period_us, n_threads);
         let fire_starter_thread = thread::spawn(move || firestarter.run());
         thread::sleep(Duration::from_secs(self.warmup_secs));
-        // let _initial_load_power = self.rapl.current_power_watts();
 
         let cap_request_time = Local::now();
         let cap_thread = self.do_cap_operation();

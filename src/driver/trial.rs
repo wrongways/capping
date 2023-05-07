@@ -108,6 +108,8 @@ impl Trial {
         let fire_starter_thread = thread::spawn(move || firestarter.run());
         thread::sleep(Duration::from_secs(self.warmup_secs));
         // let _initial_load_power = self.rapl.current_power_watts();
+
+        let cap_time = Local::now();
         let cap_thread = self.do_cap_operation();
 
         // sleep until 2s before firestarter is due to exit
@@ -140,6 +142,7 @@ impl Trial {
         fire_starter_thread.join().unwrap();
         self.log_results(
             start_time,
+            cap_time,
             load_pct,
             load_period_us,
             n_threads,
@@ -178,6 +181,7 @@ impl Trial {
     fn log_results(
         &self,
         start_time: DateTime<Local>,
+        cap_time: DateTime<Local>,
         load_pct: u64,
         load_period_us: u64,
         n_threads: u64,
@@ -199,7 +203,7 @@ impl Trial {
                 .expect("Failed to create driver log file");
             writeln!(
                 log_file,
-                "start_time,load_pct,load_period,n_threads,cap_did_complete"
+                "start_time,cap_time,load_pct,load_period,n_threads,cap_did_complete"
             )
             .expect("Failed to writer driver log file header");
         }
@@ -210,8 +214,9 @@ impl Trial {
             .expect("Failed to open driver log file");
         writeln!(
             log_file,
-            "{},{load_pct},{load_period_us},{n_threads},{cap_did_complete}",
-            &start_time.to_rfc3339_opts(SecondsFormat::Millis, true)
+            "{},{},{load_pct},{load_period_us},{n_threads},{cap_did_complete}",
+            &start_time.to_rfc3339_opts(SecondsFormat::Millis, true),
+            &cap_time.to_rfc3339_opts(SecondsFormat::Millis, true)
         )
         .expect("Failed to write driver log entry");
     }

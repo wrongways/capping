@@ -3,7 +3,6 @@ use crate::cli::CONFIGURATION;
 use crate::core_count;
 use crate::driver::firestarter::Firestarter;
 use crate::driver::{CappingOperation, CappingOrder};
-// use crate::rapl::RAPL;
 use chrono::{DateTime, Local, SecondsFormat};
 use log::trace;
 use std::fs::OpenOptions;
@@ -13,6 +12,10 @@ use std::thread::{self, JoinHandle};
 use std::time::Duration;
 
 const LOG_FILENAME: &str = "driver_log";
+
+// Let firestarter run an extra 2 seconds
+// to ensure that we get a response from the
+// bmc
 
 pub struct Trial {
     bmc: BMC,
@@ -109,40 +112,36 @@ impl Trial {
         thread::sleep(Duration::from_secs(self.warmup_secs));
         // let _initial_load_power = self.rapl.current_power_watts();
 
-        let cap_time = Local::now();
+        let cap_request_time = Local::now();
         let cap_thread = self.do_cap_operation();
 
-        // sleep until 2s before firestarter is due to exit
-
-        /*
-        **************************************************************
-
-        >>>>>  ATTENTION  <<<<<
-
-        Next two lines need uncommenting for real test - they're
-        removed just to test the timing
-
-        **************************************************************
-        */
-
-        /*
-        let sleeptime = self.total_runtime_secs - self.warmup_secs - 2;
-        thread::sleep(Duration::from_secs(sleeptime));
-        */
-
-        // *** UNCOMMENT PREVIOUS 2 lines
-
-        // Did the cap_thread complete?
-        let cap_did_complete = cap_thread.is_finished();
+        // check to see if capping thread has returned
+        let sleep_millis = 250;
+        let mut cap_did_complete = false;
+        let mut cap_complete_time_millis: i64 = -1;
+        for t in 0..(CONFIGURATION.test_time_secs * 1000 / sleep_millis) {
+            thread::sleep(Duration::from_millis(1000));
+            if cap_thread.is_finished() {
+                cap_did_complete = true;
+                cap_complete_time_millis = (t * sleep_millis) as i64;
+                break;
+            }
+        }
 
         // TODO: check if capping worked by comparing power just before
         // firestarter exits to the initial_load_power above. If capping worked
         // can do an early exit
 
+        // wait for firestarter to exit
         fire_starter_thread.join().unwrap();
+        let end_time = Local::now();
+
+
         self.log_results(
             start_time,
-            cap_time,
+            end_time,
+            cap_request_time,
+            cap_complete_time_millis,
             load_pct,
             load_period_us,
             n_threads,
@@ -181,7 +180,9 @@ impl Trial {
     fn log_results(
         &self,
         start_time: DateTime<Local>,
-        cap_time: DateTime<Local>,
+        end_time: DateTime<Local>,
+        cap_request_time: DateTime<Local>,
+        cap_complete_time_millis: i64,
         load_pct: u64,
         load_period_us: u64,
         n_threads: u64,
@@ -203,7 +204,7 @@ impl Trial {
                 .expect("Failed to create driver log file");
             writeln!(
                 log_file,
-                "start_time,cap_time,load_pct,load_period,n_threads,cap_did_complete"
+                "start_time,end_time,cap_request_time,cap_complete_time_millis,load_pct,load_period,n_threads,cap_did_complete"
             )
             .expect("Failed to writer driver log file header");
         }
@@ -214,9 +215,11 @@ impl Trial {
             .expect("Failed to open driver log file");
         writeln!(
             log_file,
-            "{},{},{load_pct},{load_period_us},{n_threads},{cap_did_complete}",
+            "{},{},{},{},{load_pct},{load_period_us},{n_threads},{cap_did_complete}",
             &start_time.to_rfc3339_opts(SecondsFormat::Millis, true),
-            &cap_time.to_rfc3339_opts(SecondsFormat::Millis, true)
+            &end_time.to_rfc3339_opts(SecondsFormat::Millis, true),
+            &cap_request_time.to_rfc3339_opts(SecondsFormat::Millis, true),
+            cap_complete_time_millis,
         )
         .expect("Failed to write driver log entry");
     }

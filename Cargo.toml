@@ -1,19 +1,17 @@
 [package]
-name = "capping"
+name = "trial2"
 version = "0.1.0"
 edition = "2021"
-authors =["jez"]
-description = "Tool for testing CPU capping latencies"
-readme = "README.adoc"
-repository = "git@github.com:wrongways/capping"
+authors = ["Jez Wain"]
+description = "Test harness to determine the conditions where capping is not applied"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-async-std = "1.12.0"
-chrono = "0.4.24"
-clap = { version = "4.2.4", features = ["derive"] }
-derive = "1.0.0"
-features = "0.10.0"
-glob = "0.3.1"
+sysconf = "0.3.4"
 log = "0.4.17"
 simple_logger = "4.1.0"
-toml = "0.7.3"
+lazy_static = "1.4.0"
+clap = { version = "4.2.7", features = ["derive"] }
+chrono = "0.4.24"
+glob = "0.3.1"

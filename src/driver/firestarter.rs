@@ -1,23 +1,33 @@
+use log::{trace, error};
 use std::process::Command;
 use std::fmt::{self, Display, Formatter};
 
+const FIRESTARTER: &str = "/home_nfs/wainj/local/bin/firestarter";
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Firestarter {
     path: String,
-    pub runtime_secs: u32,
-    pub load_pct: u32,
-    pub load_period_us: u64,
-    pub n_threads: u32,
+    runtime_secs: u64,
+    load_pct: u64,
+    load_period_us: u64,
+    n_threads: u64,
 }
 
 impl Firestarter {
-    pub fn new(path: &str, runtime_secs: u32, load_pct: u32, load_period_us: u64, n_threads: u32) -> Self {
+    pub fn new(runtime_secs: u64, load_pct: u64, load_period_us: u64, n_threads: u64) -> Self {
         assert!(load_pct > 0 && load_pct <= 100);
-        Self {path: String::from(path), runtime_secs, load_pct, load_period_us, n_threads}
+        assert!(load_period_us == 0 || load_pct <= load_period_us);
+        Self {
+            path: String::from(FIRESTARTER),
+            runtime_secs,
+            load_pct,
+            load_period_us,
+            n_threads,
+        }
     }
 
-    pub fn launch(&self) {
+    pub fn run(&self) {
+        trace!("FIRESTARTER LAUNCHING:\n{self}");
         let firestarter = Command::new(&self.path)
             .arg("--quiet")
             .arg("--timeout")
@@ -31,7 +41,10 @@ impl Firestarter {
             .spawn()
             .unwrap();
 
-        let _ = firestarter.wait_with_output().expect("firestarter failed");
+        match firestarter.wait_with_output() {
+            Ok(_) => trace!("FIRESTARTER exited successfully"),
+            Err(e) => error!("FIRESTARTER failed: {e:?}"),
+        }
     }
 }
 

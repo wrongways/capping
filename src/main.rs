@@ -3,8 +3,8 @@ use log::{debug, info};
 use simple_logger;
 use std::{fs, sync::mpsc, thread};
 
-use trial2::cli::CONFIGURATION;
-use trial2::{driver, monitor};
+use capping::cli::CONFIGURATION;
+use capping::{driver, monitor};
 
 fn main() {
     simple_logger::SimpleLogger::new().env().init().unwrap();

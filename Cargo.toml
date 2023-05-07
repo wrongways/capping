@@ -1,0 +1,17 @@
+[package]
+name = "trial2"
+version = "0.1.0"
+edition = "2021"
+authors = ["Jez Wain"]
+description = "Test harness to determine the conditions where capping is not applied"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+sysconf = "0.3.4"
+log = "0.4.17"
+simple_logger = "4.1.0"
+lazy_static = "1.4.0"
+clap = { version = "4.2.7", features = ["derive"] }
+chrono = "0.4.24"
+glob = "0.3.1"

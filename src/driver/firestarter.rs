@@ -1,6 +1,6 @@
-use log::{trace, error};
-use std::process::Command;
+use log::{error, trace};
 use std::fmt::{self, Display, Formatter};
+use std::process::Command;
 
 const FIRESTARTER: &str = "/home_nfs/wainj/local/bin/firestarter";
 
@@ -50,7 +50,10 @@ impl Firestarter {
 
 impl Display for Firestarter {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        write!(f, "{} --timeout {} --load {} --period {} --threads {}",
-        self.path, self.runtime_secs, self.load_pct, self.load_period_us, self.n_threads)
+        write!(
+            f,
+            "{} --timeout {} --load {} --period {} --threads {}",
+            self.path, self.runtime_secs, self.load_pct, self.load_period_us, self.n_threads
+        )
     }
 }

@@ -29,7 +29,7 @@ impl PowerStat {
     }
 }
 
-impl std::fmt::Display for PowerStat {
+impl fmt::Display for PowerStat {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,

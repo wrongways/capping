@@ -75,7 +75,7 @@ impl BMC {
                 }
 
                 String::from(stdout)
-            },
+            }
             Err(e) => {
                 error!(
                     "Failed to execute command: {} {}: {:?}",
@@ -158,7 +158,7 @@ impl BMC {
                 let lhs_parts: Vec<&str> = lhs.split(' ').collect();
                 println!("BMC::parse_power_reading() parsing: {}", lhs_parts[0]);
                 match lhs_parts[0] {
-                    "Instantaneous" =>  readings.instant = BMC::parse_number(&rhs.trim()),
+                    "Instantaneous" => readings.instant = BMC::parse_number(&rhs.trim()),
                     "Minimum" => readings.minimum = BMC::parse_number(&rhs.trim()),
                     "Maximum" => readings.maximum = BMC::parse_number(&rhs.trim()),
                     "Average" => readings.average = BMC::parse_number(&rhs.trim()),
@@ -211,15 +211,14 @@ mod tests {
         ";
 
         let readings = BMC::parse_power_reading(bmc_output);
-        let expected_timestamp = NaiveDateTime::parse_from_str("2023 May 09 14:24:36", "%Y %b %d %H:%M:%S").unwrap();
+        let expected_timestamp =
+            NaiveDateTime::parse_from_str("2023 May 09 14:24:36", "%Y %b %d %H:%M:%S").unwrap();
         assert_eq!(readings.instant, 220);
         assert_eq!(readings.minimum, 70);
         assert_eq!(readings.maximum, 600);
         assert_eq!(readings.average, 220);
         assert_eq!(readings.timestamp, expected_timestamp);
-
     }
-
 
     #[test]
     fn test_parse_cap_settings1() {
@@ -250,5 +249,4 @@ mod tests {
         assert!(reading.is_active);
         assert_eq!(reading.power_limit, 2000);
     }
-
 }

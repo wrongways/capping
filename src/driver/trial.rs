@@ -131,7 +131,6 @@ impl Trial {
         fire_starter_thread.join().unwrap();
         let end_time = Local::now();
 
-
         self.log_results(
             start_time,
             end_time,

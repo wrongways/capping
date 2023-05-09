@@ -20,7 +20,7 @@ pub fn monitor_bmc(rx: Receiver<()>) {
             trace!("\tBMC: got message - exiting");
             break;
         }
-        let power_reading = bmc.read_power();
+        let power_reading = bmc.current_power();
         stats.push(PowerStat::new(power_reading));
         trace!("\tBMC READING: {}", power_reading);
 

@@ -37,10 +37,16 @@ impl BMC_PowerReading {
     }
 }
 
+impl Default for BMC_PowerReading {
+    fn default() -> Self {
+        BMC_PowerReading::new()
+    }
+}
+
 #[allow(non_camel_case_types)]
-struct BMC_CapSetting {
-    is_active: bool,
-    power_limit: u64,
+pub struct BMC_CapSetting {
+    pub is_active: bool,
+    pub power_limit: u64,
 }
 
 impl BMC {
@@ -92,10 +98,19 @@ impl BMC {
         }
     }
 
-    pub fn current_power(&self) -> u64 {
-        let bmc_output = self.run_bmc_command(BMC_READ_POWER_CMD);
-        debug!("BMC power output:\n{bmc_output}");
-        BMC::parse_power_reading(&bmc_output).instant
+    // Capping management
+    pub fn current_cap_settings(&self) -> BMC_CapSetting {
+        let bmc_output = self.run_bmc_command(BMC_CAP_SETTINGS_CMD);
+        debug!("BMC cap level output\n{bmc_output}");
+        BMC::parse_cap_settings(&bmc_output)
+    }
+
+    pub fn capping_is_active(&self) -> bool {
+        self.current_cap_settings().is_active
+    }
+
+    pub fn current_power_limit(&self) -> u64 {
+        self.current_cap_settings().power_limit
     }
 
     pub fn set_cap_power_level(&self, cap: u64) {
@@ -112,17 +127,17 @@ impl BMC {
         self.run_bmc_command(BMC_DEACTIVATE_CAP_CMD);
     }
 
-    pub fn capping_is_active(&self) -> bool {
-        let bmc_output = self.run_bmc_command(BMC_CAP_SETTINGS_CMD);
-        debug!("BMC cap level output\n{bmc_output}");
-        BMC::parse_cap_settings(&bmc_output).is_active
+
+    // Power management
+    pub fn current_power(&self) -> u64 {
+        let bmc_output = self.run_bmc_command(BMC_READ_POWER_CMD);
+        debug!("BMC power output:\n{bmc_output}");
+        BMC::parse_power_reading(&bmc_output).instant
     }
 
-    pub fn current_power_limit(&self) -> u64 {
-        let bmc_output = self.run_bmc_command(BMC_CAP_SETTINGS_CMD);
-        debug!("BMC cap level output\n{bmc_output}");
-        BMC::parse_cap_settings(&bmc_output).power_limit
-    }
+
+
+
 
     fn parse_number(power_reading: &str) -> u64 {
         trace!("BMC::parse_number({power_reading})");

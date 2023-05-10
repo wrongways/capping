@@ -98,7 +98,6 @@ impl BMC {
         BMC::parse_power_reading(&bmc_output).instant
     }
 
-    #[allow(unused_variables)]
     pub fn set_cap_power_level(&self, cap: u64) {
         let cap_cmd = format!("{BMC_SET_CAP_CMD} {cap}");
         self.run_bmc_command(&cap_cmd);
@@ -125,7 +124,6 @@ impl BMC {
         BMC::parse_cap_settings(&bmc_output).power_limit
     }
 
-    #[allow(dead_code)]
     fn parse_number(power_reading: &str) -> u64 {
         trace!("BMC::parse_number({power_reading})");
         let parts: Vec<&str> = power_reading.trim().split(' ').collect();
@@ -136,7 +134,6 @@ impl BMC {
         rc
     }
 
-    #[allow(dead_code)]
     fn date_from_string(date_string: &str) -> NaiveDateTime {
         // Tue May  9 14:24:36 2023
         let bmc_timestamp_fmt = "%a %b %e %H:%M:%S %Y";
@@ -146,7 +143,6 @@ impl BMC {
         rc
     }
 
-    #[allow(dead_code)]
     fn parse_power_reading(output: &str) -> BMC_PowerReading {
         let mut readings = BMC_PowerReading::new();
 
@@ -171,7 +167,6 @@ impl BMC {
         readings
     }
 
-    #[allow(dead_code)]
     fn parse_cap_settings(output: &str) -> BMC_CapSetting {
         // have to initialize here to keep the compiler happy
         let mut is_active: bool = false;
@@ -222,7 +217,7 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_cap_settings1() {
+    fn test_parse_cap_settings_inactive() {
         let bmc_output = "
         Current Limit State: No Active Power Limit
         Exception actions:   Hard Power Off & Log Event to SEL
@@ -237,7 +232,7 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_cap_settings2() {
+    fn test_parse_cap_settings_active() {
         let bmc_output = "
         Current Limit State: Power Limit Active
         Exception actions:   Hard Power Off & Log Event to SEL

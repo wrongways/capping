@@ -11,10 +11,14 @@ use log::debug;
 use std::fmt;
 use std::fs::File;
 use std::io::{BufWriter, Write};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use sysconf::{self, SysconfVariable};
 
+/// Generic result type - any error can be moved to std::error::Error type
+pub type ResultType<T> = Result<T, Box<dyn std::error::Error>>;
+
+/// Used for collecting power and energy stats with their timestamps
 pub struct PowerStat {
     pub timestamp: DateTime<Local>,
     pub reading: u64,
@@ -40,8 +44,9 @@ impl fmt::Display for PowerStat {
     }
 }
 
-pub type ResultType<T> = Result<T, Box<dyn std::error::Error>>;
-
+///`core_count`
+///
+/// Use sysconf to read and return number of on-line cores
 pub fn core_count() -> u64 {
     #[allow(clippy::cast_sign_loss)]
     let cores = sysconf::sysconf(SysconfVariable::ScNprocessorsOnln)
@@ -50,19 +55,28 @@ pub fn core_count() -> u64 {
     cores
 }
 
-pub fn save_power_stats(filename: &str, stats: Vec<PowerStat>, col_name: &str) -> ResultType<()> {
+// TODO: Should provide an option to save to SQLite
+
+/// `save_power_stats`
+///
+/// Builds a file path from the provided filename and the configuration stats_dir value
+/// And appends a timestamp. Writes a vector of PowerStat entries to this file using a
+/// buffered writer.
+///
+/// Returns the constructed path.
+pub fn save_power_stats(filename: &str, stats: Vec<PowerStat>, col_name: &str) -> ResultType<PathBuf> {
     // Build the filename - append a timestamp and ".csv"
     let timestamp: DateTime<Local> = Local::now();
 
     // Have to format! because timestamp.format() produces a DelayedString, incompatible with Path
     let save_filename = format!("{filename}_{}.csv", timestamp.format("%y%m%d_%H%M"));
-    let save_path = Path::new(&*CONFIGURATION.stats_dir).join(save_filename);
+    let save_path = Path::new(&*CONFIGURATION.stats_dir).join(&save_filename);
     debug!(
         "Saving stats to: {}",
         save_path.to_str().expect("Failed to get save path")
     );
 
-    let handle = File::create(save_path)?;
+    let handle = File::create(&save_path)?;
     let mut writer = BufWriter::new(handle);
 
     // If a column name is provided, print a csv header
@@ -75,7 +89,7 @@ pub fn save_power_stats(filename: &str, stats: Vec<PowerStat>, col_name: &str) -
     }
 
     // file is automatically closed when it goes out of scope
-    Ok(())
+    Ok(save_path)
 }
 
 #[cfg(test)]
@@ -99,6 +113,7 @@ mod tests {
         stats.push(s2);
         let rc = save_power_stats("test_file", stats, "test_column");
         println!("{rc:?}");
-        assert!(matches!(rc, Ok(())));
+        assert!(rc.is_ok());
+        fs::remove_file(rc.unwrap()).expect("Test save stats, failed to remove stats file");
     }
 }

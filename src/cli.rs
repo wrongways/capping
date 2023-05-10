@@ -1,23 +1,26 @@
 use ::clap::Parser;
 use lazy_static::lazy_static;
 
+const BMC_STATS_FILENAME_PREFIX: &str = "bmc_stats";
+const RAPL_STATS_FILENAME_PREFIX: &str = "rapl_stats";
+
 lazy_static! {
-  /*
-    Global configuration variable.
+    /*
+        Global configuration variable.
 
-    Lazy-static creates singleton (one-off) types that wraps a value
-    providing single initialization and thread-safety.
+        Lazy-static creates singleton (one-off) types that wraps a value
+        providing single initialization and thread-safety.
 
-    For a given: static ref NAME: TYPE = EXPR;
-    The lazy_static macro creates a unique type that implements
-    Deref<TYPE> and stores it in a static with name NAME.
+        For a given: static ref NAME: TYPE = EXPR;
+        The lazy_static macro creates a unique type that implements
+        Deref<TYPE> and stores it in a static with name NAME.
 
-    It is the wrapped value that implements any traits (eg Debug, Clone),
-    NOT the wrapper. Because of this, must deref (*NAME) when debug/trace
-    printing.
-  */
+        It is the wrapped value that implements any traits (eg Debug, Clone),
+        NOT the wrapper. Because of this, must deref (*NAME) when debug/trace
+        printing.
+    */
 
-  pub static ref CONFIGURATION: Configuration = Configuration::new();
+    pub static ref CONFIGURATION: Configuration = Configuration::new();
 }
 
 #[derive(Debug)]
@@ -30,6 +33,8 @@ pub struct Configuration {
     pub cap_low_watts: u64,
     pub cap_high_watts: u64,
     pub stats_dir: String,
+    pub bmc_stats_filename_prefix: String,
+    pub rapl_stats_filename_prefix: String,
 }
 
 impl Configuration {
@@ -44,15 +49,17 @@ impl Configuration {
             cap_low_watts: args.cap_low_watts,
             cap_high_watts: args.cap_high_watts,
             stats_dir: args.stats_dir,
+            bmc_stats_filename_prefix: String::from(BMC_STATS_FILENAME_PREFIX),
+            rapl_stats_filename_prefix: String::from(RAPL_STATS_FILENAME_PREFIX),
         }
     }
 }
 
 /*
-  >>> ATTENTION <<<
+    >>> ATTENTION <<<
 
-    When updating this structure, you probably want to update
-    the Configuration structure (and its implementation) too.
+        When updating the CLI structure below, you'll probably want to
+        update the Configuration structure (and its implementation) too.
 */
 
 #[allow(clippy::upper_case_acronyms)]

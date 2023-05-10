@@ -29,7 +29,7 @@ impl Default for RAPL {
 #[derive(Debug, Copy, Clone)]
 pub struct RAPL_Reading {
     pub domain: u64,
-    pub energy: u64,
+    pub reading: u64,
 }
 
 #[allow(non_camel_case_types)]
@@ -93,14 +93,15 @@ impl RAPL {
 }
 
 impl RAPL_Reading {
-    pub fn new(domain: u64, energy: u64) -> Self {
-        Self { domain, energy }
+    pub fn new(domain: u64, reading: u64) -> Self {
+        Self { domain, reading }
     }
 }
 
+
 impl Display for RAPL_Reading {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        write!(f, "{},{}", self.domain, self.energy)
+        write!(f, "{},{}", self.domain, self.reading)
     }
 }
 
@@ -112,6 +113,7 @@ impl RAPL_Readings {
         }
     }
 }
+
 
 impl Display for RAPL_Readings {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {

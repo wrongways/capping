@@ -131,7 +131,7 @@ impl Trial {
         fire_starter_thread.join().unwrap();
         let end_time = Local::now();
 
-        self.log_results(
+        Trial::log_results(
             start_time,
             end_time,
             cap_request_time,
@@ -171,8 +171,8 @@ impl Trial {
         })
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn log_results(
-        &self,
         start_time: DateTime<Local>,
         end_time: DateTime<Local>,
         cap_request_time: DateTime<Local>,

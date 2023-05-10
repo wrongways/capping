@@ -20,6 +20,12 @@ pub struct Driver {
     cap_low_watts: u64,
 }
 
+impl Default for Driver {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Driver {
     pub fn new() -> Self {
         Self {

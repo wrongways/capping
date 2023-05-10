@@ -1,13 +1,13 @@
 use crate::driver::Driver;
 use log::{debug, info};
-use simple_logger;
+use simple_logger::SimpleLogger;
 use std::{fs, sync::mpsc, thread};
 
 use capping::cli::CONFIGURATION;
 use capping::{driver, monitor};
 
 fn main() {
-    simple_logger::SimpleLogger::new().env().init().unwrap();
+    SimpleLogger::new().env().init().unwrap();
     debug!("Runtime config\n{:#?}", *CONFIGURATION);
 
     // create the stats directory
@@ -17,7 +17,7 @@ fn main() {
     let (monitor_tx, monitor_rx) = mpsc::channel();
 
     info!("Launching monitor");
-    let monitor_thread = thread::spawn(move || monitor::monitor(monitor_rx));
+    let monitor_thread = thread::spawn(move || monitor::monitor(&monitor_rx));
     info!("Launching driver");
     let driver = Driver::new();
     driver.run();
@@ -28,5 +28,5 @@ fn main() {
 
     // Wait for monitor to exit - the child threads have to write their stats
     monitor_thread.join().unwrap();
-    info!("Monitor ended")
+    info!("Monitor ended");
 }

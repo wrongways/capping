@@ -43,6 +43,7 @@ impl fmt::Display for PowerStat {
 pub type ResultType<T> = Result<T, Box<dyn std::error::Error>>;
 
 pub fn core_count() -> u64 {
+    #[allow(clippy::cast_sign_loss)]
     let cores = sysconf::sysconf(SysconfVariable::ScNprocessorsOnln)
         .expect("Couldn't get core count") as u64;
     debug!("Found {cores} online cores");
@@ -56,13 +57,16 @@ pub fn save_power_stats(filename: &str, stats: Vec<PowerStat>, col_name: &str) -
     // Have to format! because timestamp.format() produces a DelayedString, incompatible with Path
     let save_filename = format!("{filename}_{}.csv", timestamp.format("%y%m%d_%H%M"));
     let save_path = Path::new(&*CONFIGURATION.stats_dir).join(save_filename);
-    debug!("Saving stats to: {}", save_path.to_str().unwrap());
+    debug!(
+        "Saving stats to: {}",
+        save_path.to_str().expect("Failed to get save path")
+    );
 
     let handle = File::create(save_path)?;
     let mut writer = BufWriter::new(handle);
 
     // If a column name is provided, print a csv header
-    if col_name.len() > 0 {
+    if !col_name.is_empty() {
         writeln!(&mut writer, "timestamp,{col_name}")?;
     }
 

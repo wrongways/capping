@@ -6,7 +6,7 @@ use std::sync::mpsc::Receiver;
 use std::thread;
 use std::time::Duration;
 
-pub fn monitor_bmc(rx: Receiver<()>) {
+pub fn monitor_bmc(rx: &Receiver<()>) {
     info!("\tBMC: launched");
     let runtime_estimate = (CONFIGURATION.warmup_secs + CONFIGURATION.test_time_secs) * 500;
     let mut stats = Vec::<PowerStat>::with_capacity(runtime_estimate as usize);
@@ -16,7 +16,7 @@ pub fn monitor_bmc(rx: Receiver<()>) {
         &CONFIGURATION.bmc_password,
     );
     loop {
-        if let Ok(_) = rx.try_recv() {
+        if rx.try_recv().is_ok() {
             trace!("\tBMC: got message - exiting");
             break;
         }

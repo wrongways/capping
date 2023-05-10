@@ -11,13 +11,13 @@ use std::sync::mpsc::Receiver;
 use std::thread;
 use std::time::Duration;
 
-pub fn monitor_rapl(rx: Receiver<()>) {
+pub fn monitor_rapl(rx: &Receiver<()>) {
     info!("\tRAPL: launched");
     let runtime_estimate = (CONFIGURATION.warmup_secs + CONFIGURATION.test_time_secs) * 500;
     let mut stats = Vec::<RAPL_Readings>::with_capacity(runtime_estimate as usize);
     let rapl = RAPL::new();
     loop {
-        if let Ok(_) = rx.try_recv() {
+        if rx.try_recv().is_ok() {
             trace!("\tRAPL: got message - exiting");
             break;
         }

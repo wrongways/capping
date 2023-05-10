@@ -55,6 +55,7 @@ impl Configuration {
     the Configuration structure (and its implementation) too.
 */
 
+#[allow(clippy::upper_case_acronyms)]
 #[derive(Parser)]
 #[command(author, version, about, long_about=None)]
 struct CLI {

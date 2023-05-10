@@ -3,7 +3,7 @@ use glob::glob;
 use log::{error, trace};
 use std::fmt::{self, Display, Formatter};
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 const RAPL_DIR: &str = "/sys/devices/virtual/powercap/intel-rapl/";
 
@@ -18,6 +18,13 @@ const RAPL_CORE_GLOB: &str = "intel-rapl:?/intel-rapl:?:0/energy_uj";
 pub struct RAPL {
     rapl_paths: Vec<PathBuf>,
 }
+
+impl Default for RAPL {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone)]
 pub struct RAPL_Reading {
@@ -36,7 +43,7 @@ impl RAPL {
     pub fn new() -> Self {
         let rapl_glob = RAPL_DIR.to_owned() + RAPL_CORE_GLOB;
         let mut paths = Vec::<PathBuf>::new();
-        for path in glob(&rapl_glob).unwrap() {
+        for path in glob(&rapl_glob).expect("RAPL failed to get rapl virtual device") {
             match path {
                 Ok(p) => paths.push(p),
                 Err(e) => error!("Failed to load RAPL path: {}", e),
@@ -47,12 +54,13 @@ impl RAPL {
         Self { rapl_paths: paths }
     }
 
-    /// read_current_energy
+    /// `read_current_energy`
     ///
     /// returns the sum of core energy values from all domains
     pub fn read_current_energy(&self) -> RAPL_Readings {
         let mut readings: Vec<RAPL_Reading> = Vec::new();
-        for path in &self.rapl_paths {
+        for path_buf in &self.rapl_paths {
+            let path = path_buf.as_path();
             let energy: u64 = fs::read_to_string(path)
                 .expect("Failed to read energy file")
                 .trim()
@@ -68,7 +76,7 @@ impl RAPL {
     }
 
     // class method
-    pub fn domain_from_path(path: &PathBuf) -> u64 {
+    pub fn domain_from_path(path: &Path) -> u64 {
         path.parent()
             .expect("No parent found")
             .file_name()

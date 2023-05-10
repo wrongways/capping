@@ -150,19 +150,20 @@ impl BMC {
     fn parse_power_reading(output: &str) -> BMC_PowerReading {
         let mut readings = BMC_PowerReading::new();
 
-        for line in &mut output.lines().into_iter() {
+        for line in &mut output.lines() {
             // Can't use a simple colon (:) for the split here because of the date string
             let parts: Vec<&str> = line.trim().split(": ").collect();
             if parts.len() == 2 {
                 let (lhs, rhs) = (parts[0], parts[1]);
                 let lhs_parts: Vec<&str> = lhs.split(' ').collect();
+                debug_assert!(!lhs_parts.is_empty());
                 println!("BMC::parse_power_reading() parsing: {}", lhs_parts[0]);
                 match lhs_parts[0] {
-                    "Instantaneous" => readings.instant = BMC::parse_number(&rhs.trim()),
-                    "Minimum" => readings.minimum = BMC::parse_number(&rhs.trim()),
-                    "Maximum" => readings.maximum = BMC::parse_number(&rhs.trim()),
-                    "Average" => readings.average = BMC::parse_number(&rhs.trim()),
-                    "IPMI" => readings.timestamp = BMC::date_from_string(&rhs.trim()),
+                    "Instantaneous" => readings.instant = BMC::parse_number(rhs.trim()),
+                    "Minimum" => readings.minimum = BMC::parse_number(rhs.trim()),
+                    "Maximum" => readings.maximum = BMC::parse_number(rhs.trim()),
+                    "Average" => readings.average = BMC::parse_number(rhs.trim()),
+                    "IPMI" => readings.timestamp = BMC::date_from_string(rhs.trim()),
                     _ => continue,
                 };
             }
@@ -176,7 +177,7 @@ impl BMC {
         let mut is_active: bool = false;
         let mut power_limit: u64 = 0;
 
-        for line in &mut output.lines().into_iter() {
+        for line in &mut output.lines() {
             let parts: Vec<&str> = line.trim().split(':').collect();
             if parts.len() == 2 {
                 let (lhs, rhs) = (parts[0], parts[1]);

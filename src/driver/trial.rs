@@ -3,15 +3,13 @@ use crate::cli::CONFIGURATION;
 use crate::core_count;
 use crate::driver::firestarter::Firestarter;
 use crate::driver::{CappingOperation, CappingOrder};
-use chrono::{DateTime, Local, SecondsFormat};
+use chrono::{DateTime, Local};
 use log::trace;
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::Path;
 use std::thread::{self, JoinHandle};
 use std::time::Duration;
-
-const LOG_FILENAME: &str = "driver_log";
 
 pub struct Trial {
     bmc: BMC,
@@ -115,7 +113,7 @@ impl Trial {
         let mut cap_did_complete = false;
         let mut cap_complete_time_millis: i64 = -1;
         for t in 0..(CONFIGURATION.test_time_secs * 1000 / sleep_millis) {
-            thread::sleep(Duration::from_millis(1000));
+            thread::sleep(Duration::from_millis(sleep_millis));
             if cap_thread.is_finished() {
                 cap_did_complete = true;
                 cap_complete_time_millis = (t * sleep_millis) as i64;
@@ -186,7 +184,10 @@ impl Trial {
         let timestamp: DateTime<Local> = Local::now();
 
         // Have to format! because timestamp.format() produces a DelayedString, incompatible with Path
-        let save_filename = format!("{LOG_FILENAME}_{}.csv", timestamp.format("%y%m%d_%H%M"));
+        let timestamp_format = "%y%m%d_%H%M";
+        let save_filename = format!("{}_{}.csv",
+            &CONFIGURATION.driver_log_filename_prefix,
+            timestamp.format(timestamp_format).to_string());
         let save_path = Path::new(&*CONFIGURATION.stats_dir).join(save_filename);
 
         // If the file doesn't exist, create it and write a CSV header
@@ -210,9 +211,9 @@ impl Trial {
         writeln!(
             log_file,
             "{},{},{},{},{load_pct},{load_period_us},{n_threads},{cap_did_complete}",
-            &start_time.to_rfc3339_opts(SecondsFormat::Millis, true),
-            &end_time.to_rfc3339_opts(SecondsFormat::Millis, true),
-            &cap_request_time.to_rfc3339_opts(SecondsFormat::Millis, true),
+            &start_time.to_rfc3339(),
+            &end_time.to_rfc3339(),
+            &cap_request_time.to_rfc3339(),
             cap_complete_time_millis,
         )
         .expect("Failed to write driver log entry");

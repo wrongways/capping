@@ -34,6 +34,11 @@ impl Driver {
         }
     }
 
+    /// Runs through the possible permutations of capping:
+    /// * high power => low power
+    /// * low power => high power
+    /// * set cap level before activating capping
+    /// * set cap level after activating capping
     pub fn run(&self) {
         for (cap_from, cap_to) in [
             (self.cap_low_watts, self.cap_high_watts),

@@ -5,6 +5,7 @@ use std::process::Command;
 const FIRESTARTER: &str = "/home_nfs/wainj/local/bin/firestarter";
 
 #[derive(Debug)]
+/// Hold the firestarter configuration
 pub struct Firestarter {
     path: String,
     runtime_secs: u64,
@@ -26,6 +27,9 @@ impl Firestarter {
         }
     }
 
+    /// Launches firestarter. This is done on a separate thread.
+    // TODO: Might be pertinent to bind threads to processors to see if there's
+    //       uneven capping across domains.
     pub fn run(&self) {
         trace!("FIRESTARTER LAUNCHING:\n{self}");
         let firestarter = Command::new(&self.path)
@@ -39,7 +43,7 @@ impl Firestarter {
             .arg("--threads")
             .arg(self.n_threads.to_string())
             .spawn()
-            .unwrap();
+            .expect("Firestarter failed to launch");
 
         match firestarter.wait_with_output() {
             Ok(_) => trace!("FIRESTARTER exited successfully"),

@@ -5,17 +5,18 @@ use std::fmt::{self, Display, Formatter};
 use std::fs;
 use std::path::{Path, PathBuf};
 
+// There is one sub-directory of this directory for each RAPL domain - usually a
+// domain maps to a socket. For each domain energy readings for the core and memory
+// are available in sub-domains. The assumption, based on anecdotal evidence only,
+// is that sub-domain 0 is the processor core. A more rigorous approach would read
+// the name of each sub-domain to identify each part. For future work perhaps?
 const RAPL_DIR: &str = "/sys/devices/virtual/powercap/intel-rapl/";
 
-// This glob pattern picks up all the energy files for the "core" energy
-// for all of the available domains (i.e. sockets) in the server
-// There is an assumption that there is at least one and no more than nine domains.
-// With more than 9 domains replace the question marks with asterisks.
-const RAPL_CORE_GLOB: &str = "intel-rapl:?/intel-rapl:?:0/energy_uj";
 
 // Holds the concrete (non-globbed) RAPL paths
 #[derive(Debug)]
 pub struct RAPL {
+    /// A list of fully-qualified paths for the core energy files for every domain.
     rapl_paths: Vec<PathBuf>,
 }
 
@@ -28,7 +29,11 @@ impl Default for RAPL {
 #[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone)]
 pub struct RAPL_Reading {
+    /// domain id: 0, 1, 2,...
     pub domain: u64,
+    /// The reading. For the RAPL object, this reading is in µJ.
+    /// The structure is also used in `monitor/monitor_rapl.rs` when converting energy to
+    /// power, with units in Watts.
     pub reading: u64,
 }
 
@@ -36,11 +41,18 @@ pub struct RAPL_Reading {
 #[derive(Debug)]
 pub struct RAPL_Readings {
     pub timestamp: DateTime<Local>,
+    /// List of readings (see above) for all known domains
     pub readings: Vec<RAPL_Reading>,
 }
 
 impl RAPL {
     pub fn new() -> Self {
+        // This glob pattern picks up all the energy files for the "core" energy
+        // for all of the available domains (i.e. sockets) in the server
+        // The shell glob is is limited (no regex). The contents of the two starred fields
+        // should be identical (this is not checked)
+        const RAPL_CORE_GLOB: &str = "intel-rapl:*/intel-rapl:*:0/energy_uj";
+
         let rapl_glob = RAPL_DIR.to_owned() + RAPL_CORE_GLOB;
         let mut paths = Vec::<PathBuf>::new();
         for path in glob(&rapl_glob).expect("RAPL failed to get rapl virtual device") {
@@ -56,7 +68,7 @@ impl RAPL {
 
     /// `read_current_energy`
     ///
-    /// returns the sum of core energy values from all domains
+    /// returns list of core energy values for all domains
     pub fn read_current_energy(&self) -> RAPL_Readings {
         let mut readings: Vec<RAPL_Reading> = Vec::new();
         for path_buf in &self.rapl_paths {
@@ -76,6 +88,7 @@ impl RAPL {
     }
 
     // class method
+    /// Parse a RAPL path and extract the domain id.
     pub fn domain_from_path(path: &Path) -> u64 {
         path.parent()
             .expect("No parent found")

@@ -58,6 +58,19 @@ impl BMC {
         }
     }
 
+    /// `run_bmc_command`
+    ///
+    /// Executes an IPMI command to run an operation on a BMC. It uses the BMC credentials configured
+    /// when the self instance was created.
+    ///
+    /// # Arguments
+    /// * `bmc_command` - a string slice with command to exectue
+    ///
+    /// # Return
+    /// * <stdout> as a string
+    ///
+    /// # Panics
+    /// The method will panic if the command fails to run
     fn run_bmc_command(&self, bmc_command: &str) -> String {
         // Concatenate command with the credentials
         let ipmi_args = format!(
@@ -99,6 +112,7 @@ impl BMC {
     }
 
     // Capping management
+    /// Returns the current cap power limit and activation state in a CapSetting struct
     pub fn current_cap_settings(&self) -> BMC_CapSetting {
         let bmc_output = self.run_bmc_command(BMC_CAP_SETTINGS_CMD);
         debug!("BMC cap level output\n{bmc_output}");
@@ -138,36 +152,65 @@ impl BMC {
 
 
 
-
-    fn parse_number(power_reading: &str) -> u64 {
+    /// Parses a u64 from the first word in the `power_reading` string
+    /// Used in the application to parse the power values returned from
+    /// # Example
+    /// ```
+    /// use capping::bmc::BMC;
+    /// assert_eq!(220, BMC::parse_number("220 Watts"));
+    /// ```
+    pub fn parse_number(power_reading: &str) -> u64 {
         trace!("BMC::parse_number({power_reading})");
-        let parts: Vec<&str> = power_reading.trim().split(' ').collect();
+        let parts: Vec<&str> = power_reading.trim().split_ascii_whitespace().collect();
         trace!("BMC::parse_number parts: {parts:#?}");
-        assert_eq!(parts.len(), 2);
+        assert!(parts.len() >= 2);
         let rc = parts[0].parse().expect("Failed to parse power reading");
         trace!("BMC::parse_number -> {rc}");
         rc
     }
 
-    fn date_from_string(date_string: &str) -> NaiveDateTime {
+    /// Parses a BMC date string into local time without timezone (NaiveDateTime)
+    ///
+    /// # Example
+    /// ```
+    /// use chrono::{NaiveDate, NaiveDateTime};
+    /// use capping::bmc::BMC;
+    ///
+    /// let bmc_date_string = "Tue May  9 14:24:36 2023";
+    /// let bmc_date = BMC::date_from_string(bmc_date_string);
+    /// let expected: NaiveDateTime = NaiveDate::from_ymd_opt(2023, 5, 9).unwrap().and_hms_opt(14, 24, 36).unwrap();
+    /// assert_eq!(expected, bmc_date);
+    /// ```
+    ///
+    /// # Panics
+    /// Will panic if the date string cannot be parsed
+    pub fn date_from_string(date_string: &str) -> NaiveDateTime {
         // Tue May  9 14:24:36 2023
         let bmc_timestamp_fmt = "%a %b %e %H:%M:%S %Y";
-        let rc = NaiveDateTime::parse_from_str(date_string.trim(), bmc_timestamp_fmt)
+        let dt = NaiveDateTime::parse_from_str(date_string.trim(), bmc_timestamp_fmt)
             .expect("Failed to parse BMC timestamp");
-        trace!("BMC::date_from_string({date_string}) -> {rc}");
-        rc
+        trace!("BMC::date_from_string({date_string}) -> {dt}");
+        dt
     }
 
+    /// Parses the ouptut of BMC ipmi dcmi power command, returning a BMC_PowerReading struct
     fn parse_power_reading(output: &str) -> BMC_PowerReading {
         let mut readings = BMC_PowerReading::new();
 
+        // An example of the output format is shown in the tests below
+        // It comprises a series of rows, some empty. The non-empty rows contain
+        // a key and a value separated by a colon followed by whitespace.
+        // The routine matches on the first word of the key and calls the appropriate
+        // parser to convert the value into its natural type (from a string).
         for line in &mut output.lines() {
             // Can't use a simple colon (:) for the split here because of the date string
             let parts: Vec<&str> = line.trim().split(": ").collect();
+
+            // skip empty lines by checking # parts
             if parts.len() == 2 {
                 let (lhs, rhs) = (parts[0], parts[1]);
-                let lhs_parts: Vec<&str> = lhs.split(' ').collect();
-                debug_assert!(!lhs_parts.is_empty());
+                let lhs_parts: Vec<&str> = lhs.split_ascii_whitespace().collect();
+                assert!(!lhs_parts.is_empty());
                 println!("BMC::parse_power_reading() parsing: {}", lhs_parts[0]);
                 match lhs_parts[0] {
                     "Instantaneous" => readings.instant = BMC::parse_number(rhs.trim()),
@@ -182,6 +225,9 @@ impl BMC {
         readings
     }
 
+    /// Parses the output of the IPMI dcmi power capping commands
+    /// Like power_readings above, the output comprises key/value pairs separated by a colon
+    // Example output is shown in the tests below.
     fn parse_cap_settings(output: &str) -> BMC_CapSetting {
         // have to initialize here to keep the compiler happy
         let mut is_active: bool = false;

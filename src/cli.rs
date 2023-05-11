@@ -4,6 +4,7 @@ use lazy_static::lazy_static;
 const BMC_STATS_FILENAME_PREFIX: &str = "bmc_stats";
 const RAPL_STATS_FILENAME_PREFIX: &str = "rapl_stats";
 const DRIVER_LOG_FILENAME_PREFIX: &str = "driver_log";
+const MONITOR_POLL_FREQ_HZ: u64 = 2;
 
 lazy_static! {
     /*
@@ -37,6 +38,7 @@ pub struct Configuration {
     pub bmc_stats_filename_prefix: String,
     pub rapl_stats_filename_prefix: String,
     pub driver_log_filename_prefix: String,
+    pub monitor_poll_freq_hz: u64,
 }
 
 impl Configuration {
@@ -54,6 +56,7 @@ impl Configuration {
             bmc_stats_filename_prefix: String::from(BMC_STATS_FILENAME_PREFIX),
             rapl_stats_filename_prefix: String::from(RAPL_STATS_FILENAME_PREFIX),
             driver_log_filename_prefix: String::from(DRIVER_LOG_FILENAME_PREFIX),
+            monitor_poll_freq_hz: MONITOR_POLL_FREQ_HZ,
         }
     }
 }

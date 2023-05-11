@@ -11,24 +11,32 @@ use std::sync::mpsc::Receiver;
 use std::thread;
 use std::time::Duration;
 
+
+/// Periodically reads all the `energy_uj` files and saves the result. Runs on its own thread.
+/// Each time through the loop, checks for a message from the main monitor thread that signals
+/// that this thread can exit. Before exiting, saves results to CSV file.
 pub fn monitor_rapl(rx: &Receiver<()>) {
     info!("\tRAPL: launched");
     let runtime_estimate = (CONFIGURATION.warmup_secs + CONFIGURATION.test_time_secs) * 500;
     let mut stats = Vec::<RAPL_Readings>::with_capacity(runtime_estimate as usize);
     let rapl = RAPL::new();
+    let sleep_millis = 1000/CONFIGURATION.monitor_poll_freq_hz;
     loop {
         if rx.try_recv().is_ok() {
             trace!("\tRAPL: got message - exiting");
             break;
         }
-        stats.push(rapl.read_current_energy());
-        trace!("\tRAPL: sleeping");
-        thread::sleep(Duration::from_millis(1000));
+        let energy_reading = rapl.read_current_energy();
+        trace!("{energy_reading}");
+        stats.push(energy_reading);
+        thread::sleep(Duration::from_millis(sleep_millis));
     }
     save_rapl_stats(&stats).expect("Failed to save RAPL stats");
     info!("\tRAPL: Exiting");
 }
 
+
+/// Writes the RAPL stats to CSV file.
 fn save_rapl_stats(stats: &[RAPL_Readings]) -> ResultType<PathBuf> {
     // Build the filename - append a timestamp and ".csv"
     let timestamp: DateTime<Local> = Local::now();
@@ -60,7 +68,7 @@ fn save_rapl_stats(stats: &[RAPL_Readings]) -> ResultType<PathBuf> {
     writeln!(&mut writer, "timestamp,{domains}")?;
 
     // Rather than recording the raw energy values, calculate the power for each domain
-    for datapoint in convert_energy_to_power(&stats) {
+    for datapoint in convert_energy_to_power(stats) {
         writeln!(&mut writer, "{datapoint}")?;
     }
 
@@ -68,6 +76,7 @@ fn save_rapl_stats(stats: &[RAPL_Readings]) -> ResultType<PathBuf> {
     Ok(save_path)
 }
 
+/// Does what it says on the packet - divides energy deltas by time deltas to give power.
 fn convert_energy_to_power(stats: &[RAPL_Readings]) -> Vec<RAPL_Readings> {
     // The units of reading are µJ
 
@@ -88,19 +97,6 @@ fn convert_energy_to_power(stats: &[RAPL_Readings]) -> Vec<RAPL_Readings> {
         let mut power_readings: Vec<RAPL_Reading> = Vec::with_capacity(n_domains);
         let time_delta = stat.timestamp - stats[stat_index].timestamp;
         let time_midpoint = stat.timestamp - (time_delta / 2);
-
-        /*
-         * This generates a lot of noise in the logs so only
-         * uncomment if you're seeing problems with timestamps
-
-        trace!(" Previous time: {}", stats[stat_index].timestamp);
-        trace!("  Current time: {}", stat.timestamp);
-        trace!("    Time delta: {:?}", time_delta);
-        trace!("1/2 Time delta: {:?}", time_delta/2);
-        trace!(" Time midpoint: {}\n", time_midpoint);
-
-         */
-
 
         // Loop over the domains
         for (domain_index, reading) in stat.readings.iter().enumerate() {

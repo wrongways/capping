@@ -18,6 +18,8 @@ use std::time::Duration;
 pub fn monitor_rapl(rx: &Receiver<()>) {
     info!("\tRAPL: launched");
     let runtime_estimate = (CONFIGURATION.warmup_secs + CONFIGURATION.test_time_secs) * 500;
+    // This code will only run on 64-bit hardware, cast to usize is safe
+    #[allow(clippy::cast_possible_truncation)]
     let mut stats = Vec::<RAPL_Readings>::with_capacity(runtime_estimate as usize);
     let rapl = RAPL::new();
     let sleep_millis = 1000/CONFIGURATION.monitor_poll_freq_hz;
@@ -101,6 +103,8 @@ fn convert_energy_to_power(stats: &[RAPL_Readings]) -> Vec<RAPL_Readings> {
         // Loop over the domains
         for (domain_index, reading) in stat.readings.iter().enumerate() {
             let energy_delta_uj = reading.reading - stats[stat_index].readings[domain_index].reading;
+            // time delta is always positive so no loss of sign
+            #[allow(clippy::cast_sign_loss)]
             let power_watts = energy_delta_uj / 1_000_000 / time_delta.num_seconds() as u64;
             power_readings.push(RAPL_Reading {
                 domain: reading.domain,

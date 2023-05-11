@@ -46,6 +46,7 @@ pub struct RAPL_Readings {
 }
 
 impl RAPL {
+    #[must_use]
     pub fn new() -> Self {
         // This glob pattern picks up all the energy files for the "core" energy
         // for all of the available domains (i.e. sockets) in the server
@@ -69,6 +70,7 @@ impl RAPL {
     /// `read_current_energy`
     ///
     /// returns list of core energy values for all domains
+    #[must_use]
     pub fn read_current_energy(&self) -> RAPL_Readings {
         let mut readings: Vec<RAPL_Reading> = Vec::new();
         for path_buf in &self.rapl_paths {
@@ -89,6 +91,7 @@ impl RAPL {
 
     // class method
     /// Parse a RAPL path and extract the domain id.
+    #[must_use]
     pub fn domain_from_path(path: &Path) -> u64 {
         path.parent()
             .expect("No parent found")
@@ -106,6 +109,7 @@ impl RAPL {
 }
 
 impl RAPL_Reading {
+    #[must_use]
     pub fn new(domain: u64, reading: u64) -> Self {
         Self { domain, reading }
     }
@@ -119,6 +123,7 @@ impl Display for RAPL_Reading {
 }
 
 impl RAPL_Readings {
+    #[must_use]
     pub fn new(readings: Vec<RAPL_Reading>) -> Self {
         Self {
             timestamp: Local::now(),

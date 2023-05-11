@@ -16,6 +16,9 @@ pub struct Firestarter {
 }
 
 impl Firestarter {
+    #[must_use]
+    /// Creates a new firestarter instance ready to run performing basic validation which may cause...
+    /// # Panics
     pub fn new(runtime_secs: u64, load_pct: u64, load_period_us: u64, n_threads: u64) -> Self {
         assert!(load_pct > 0 && load_pct <= 100);
         assert!(load_period_us == 0 || load_pct <= load_period_us);

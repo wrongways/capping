@@ -50,6 +50,7 @@ pub struct BMC_CapSetting {
 }
 
 impl BMC {
+    #[must_use]
     pub fn new(hostname: &str, username: &str, password: &str) -> Self {
         Self {
             hostname: String::from(hostname),
@@ -112,17 +113,20 @@ impl BMC {
     }
 
     // Capping management
-    /// Returns the current cap power limit and activation state in a CapSetting struct
+    /// Returns the current cap power limit and activation state in a `CapSetting` struct
+    #[must_use]
     pub fn current_cap_settings(&self) -> BMC_CapSetting {
         let bmc_output = self.run_bmc_command(BMC_CAP_SETTINGS_CMD);
         debug!("BMC cap level output\n{bmc_output}");
         BMC::parse_cap_settings(&bmc_output)
     }
 
+    #[must_use]
     pub fn capping_is_active(&self) -> bool {
         self.current_cap_settings().is_active
     }
 
+    #[must_use]
     pub fn current_power_limit(&self) -> u64 {
         self.current_cap_settings().power_limit
     }
@@ -143,6 +147,7 @@ impl BMC {
 
 
     // Power management
+    #[must_use]
     pub fn current_power(&self) -> u64 {
         let bmc_output = self.run_bmc_command(BMC_READ_POWER_CMD);
         debug!("BMC power output:\n{bmc_output}");
@@ -159,17 +164,21 @@ impl BMC {
     /// use capping::bmc::BMC;
     /// assert_eq!(220, BMC::parse_number("220 Watts"));
     /// ```
+    ///
+    /// # Panics
+    /// If the passed string is empty, or first word is not a number
+    #[must_use]
     pub fn parse_number(power_reading: &str) -> u64 {
         trace!("BMC::parse_number({power_reading})");
         let parts: Vec<&str> = power_reading.trim().split_ascii_whitespace().collect();
         trace!("BMC::parse_number parts: {parts:#?}");
-        assert!(parts.len() >= 2);
+        assert!(!parts.is_empty());
         let rc = parts[0].parse().expect("Failed to parse power reading");
         trace!("BMC::parse_number -> {rc}");
         rc
     }
 
-    /// Parses a BMC date string into local time without timezone (NaiveDateTime)
+    /// Parses a BMC date string into local time without timezone (`NaiveDateTime`)
     ///
     /// # Example
     /// ```
@@ -184,6 +193,7 @@ impl BMC {
     ///
     /// # Panics
     /// Will panic if the date string cannot be parsed
+    #[must_use]
     pub fn date_from_string(date_string: &str) -> NaiveDateTime {
         // Tue May  9 14:24:36 2023
         let bmc_timestamp_fmt = "%a %b %e %H:%M:%S %Y";
@@ -193,7 +203,9 @@ impl BMC {
         dt
     }
 
-    /// Parses the ouptut of BMC ipmi dcmi power command, returning a BMC_PowerReading struct
+    /// Parses the ouptut of BMC ipmi dcmi power command, returning a `BMC_PowerReading` struct
+    #[must_use]
+    #[allow(clippy::match_on_vec_items)]
     fn parse_power_reading(output: &str) -> BMC_PowerReading {
         let mut readings = BMC_PowerReading::new();
 
@@ -212,6 +224,8 @@ impl BMC {
                 let lhs_parts: Vec<&str> = lhs.split_ascii_whitespace().collect();
                 assert!(!lhs_parts.is_empty());
                 println!("BMC::parse_power_reading() parsing: {}", lhs_parts[0]);
+
+                // despite what clippy says, this won't panic
                 match lhs_parts[0] {
                     "Instantaneous" => readings.instant = BMC::parse_number(rhs.trim()),
                     "Minimum" => readings.minimum = BMC::parse_number(rhs.trim()),
@@ -226,8 +240,9 @@ impl BMC {
     }
 
     /// Parses the output of the IPMI dcmi power capping commands
-    /// Like power_readings above, the output comprises key/value pairs separated by a colon
+    /// Like `power_readings` above, the output comprises key/value pairs separated by a colon
     // Example output is shown in the tests below.
+    #[must_use]
     fn parse_cap_settings(output: &str) -> BMC_CapSetting {
         // have to initialize here to keep the compiler happy
         let mut is_active: bool = false;

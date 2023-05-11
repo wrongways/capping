@@ -50,6 +50,7 @@ impl Default for Driver {
 }
 
 impl Driver {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             cap_high_watts: CONFIGURATION.cap_high_watts,

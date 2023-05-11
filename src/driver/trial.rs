@@ -4,7 +4,7 @@ use crate::core_count;
 use crate::driver::firestarter::Firestarter;
 use crate::driver::{CappingOperation, CappingOrder};
 use chrono::{self, DateTime, Local};
-use log::trace;
+use log::{trace, info};
 use std::cmp::max;
 use std::fs::OpenOptions;
 use std::io::Write;
@@ -132,6 +132,8 @@ impl Trial {
             for idle_threads in 0..max_idle_threads {
                 self.run_test_scenario(load_pct, load_period, core_count - idle_threads);
             }
+        } else {
+            info!("Can't run decreasing cores with only one core");
         }
     }
 

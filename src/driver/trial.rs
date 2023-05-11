@@ -231,7 +231,7 @@ impl Trial {
             .expect("Failed to open driver log file");
         writeln!(
             log_file,
-            "{},{},{},{},{},{},{},{}",
+            "{},{},{},{},{},{},{},{},{},{}",
             self.start_time.to_rfc3339(),
             self.end_time.to_rfc3339(),
             self.cap_request_time.to_rfc3339(),
@@ -239,7 +239,9 @@ impl Trial {
             self.time_to_cap.num_milliseconds(),
             self.load_pct,
             self.load_period_us,
-            self.n_threads
+            self.n_threads,
+            self.capping_order,
+            self.capping_operation
         )?;
         Ok(())
     }
@@ -261,7 +263,9 @@ impl Trial {
             cap_complete_time_millis,\
             load_pct,\
             load_period,\
-            n_threads"
+            n_threads,\
+            capping_order,\
+            capping_operation"
         )?;
 
         Ok(())

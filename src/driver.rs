@@ -1,6 +1,6 @@
 pub mod firestarter;
 mod trial;
-
+use std::fmt::{self, Display};
 use crate::cli::CONFIGURATION;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -9,11 +9,34 @@ pub enum CappingOrder {
     LevelAfterActivate,
 }
 
+impl Display for CappingOrder {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}",
+            match self {
+                Self::LevelBeforeActivate => "LevelBeforeActivate",
+                Self::LevelAfterActivate => "LevelAfterActivate",
+            }
+        )
+    }
+}
+
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum CappingOperation {
     Activate,
     Deactivate,
 }
+
+impl Display for CappingOperation {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}",
+            match self {
+                Self::Activate => "Activate",
+                Self::Deactivate => "Deactivate",
+            }
+        )
+    }
+}
+
 
 pub struct Driver {
     cap_high_watts: u64,

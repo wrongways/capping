@@ -1,4 +1,4 @@
-use log::{error, trace};
+use log::{error, trace, debug};
 use std::env;
 use std::fmt::{self, Display, Formatter};
 use std::process::Command;
@@ -36,9 +36,15 @@ impl Firestarter {
     //       uneven capping across domains.
     pub fn run(&self) {
         // If it's a dry run only run at light load
-        let real_capping_load = match env::var("CAPPING_DRY_RUN") {
-            Ok(_) => 2,
-            Err(_) => self.load_pct,
+        let real_capping_load:u64 = match env::var("CAPPING_DRY_RUN") {
+            Ok(n) => {
+                debug!("Found CAPPING_DRY_RUN = {n}");
+                n.parse().expect("Failed to parse CAPPING_DRY_RUN to u64")
+            },
+            Err(_) => {
+                debug!("CAPPING_DRY_RUN not set, using real load_pct");
+                self.load_pct
+            },
         };
 
         trace!("FIRESTARTER LAUNCHING:\n{self}");

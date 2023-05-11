@@ -1,5 +1,5 @@
 use chrono::NaiveDateTime;
-use log::{debug, error, trace};
+use log::error;
 use std::process::Command;
 use std::fmt::{self, Display, Debug};
 
@@ -76,11 +76,9 @@ impl BMC {
     fn run_bmc_command(&self, bmc_command: &str) -> String {
         // Concatenate command with the credentials
         let ipmi_args = format!("{} {}", self, bmc_command);
-        debug!("BMC command: {IPMI_PATH} {ipmi_args}");
 
         // process::Command requires arguments as an array
         let ipmi_args: Vec<&str> = ipmi_args.split_whitespace().collect();
-        trace!("bmc command arguments: {:?}", &ipmi_args);
 
         // Launch the command
         match Command::new(IPMI_PATH).args(&ipmi_args).output() {
@@ -115,7 +113,6 @@ impl BMC {
     #[must_use]
     pub fn current_cap_settings(&self) -> BMC_CapSetting {
         let bmc_output = self.run_bmc_command(BMC_CAP_SETTINGS_CMD);
-        debug!("BMC cap level output\n{bmc_output}");
         BMC::parse_cap_settings(&bmc_output)
     }
 
@@ -148,7 +145,6 @@ impl BMC {
     #[must_use]
     pub fn current_power(&self) -> u64 {
         let bmc_output = self.run_bmc_command(BMC_READ_POWER_CMD);
-        debug!("BMC power output:\n{bmc_output}");
         BMC::parse_power_reading(&bmc_output).instant
     }
 
@@ -167,12 +163,9 @@ impl BMC {
     /// If the passed string is empty, or first word is not a number
     #[must_use]
     pub fn parse_number(power_reading: &str) -> u64 {
-        trace!("BMC::parse_number({power_reading})");
         let parts: Vec<&str> = power_reading.trim().split_ascii_whitespace().collect();
-        trace!("BMC::parse_number parts: {parts:#?}");
         assert!(!parts.is_empty());
         let n: u64 = parts[0].parse().expect("Failed to parse power reading");
-        trace!("BMC::parse_number -> {n}");
         n
     }
 
@@ -197,7 +190,6 @@ impl BMC {
         let bmc_timestamp_fmt = "%a %b %e %H:%M:%S %Y";
         let dt = NaiveDateTime::parse_from_str(date_string.trim(), bmc_timestamp_fmt)
             .expect("Failed to parse BMC timestamp");
-        trace!("BMC::date_from_string({date_string}) -> {dt}");
         dt
     }
 
@@ -221,7 +213,6 @@ impl BMC {
                 let (lhs, rhs) = (parts[0], parts[1]);
                 let lhs_parts: Vec<&str> = lhs.split_ascii_whitespace().collect();
                 assert!(!lhs_parts.is_empty());
-                println!("BMC::parse_power_reading() parsing: {}", lhs_parts[0]);
 
                 // despite what clippy says, this won't panic
                 match lhs_parts[0] {
@@ -267,7 +258,7 @@ impl BMC {
 impl Display for BMC {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "-H {} -U {} -P {}",
-            self.hostname, self.username, self.username)
+            self.hostname, self.username, self.password)
     }
 }
 

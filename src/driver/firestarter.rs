@@ -36,12 +36,10 @@ impl Firestarter {
     //       uneven capping across domains.
     pub fn run(&self) {
         // If it's a dry run only run at light load
-        let real_capping_load =
-            if env::var("CAPPING_DRY_RUN").is_ok() {
-                2
-            } else {
-                self.load_pct
-            };
+        let real_capping_load = match env::var("CAPPING_DRY_RUN") {
+            Ok(_) => 2,
+            Err(_) => self.load_pct,
+        };
 
         trace!("FIRESTARTER LAUNCHING:\n{self}");
         let firestarter = Command::new(&self.path)

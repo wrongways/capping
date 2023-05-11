@@ -1,6 +1,7 @@
 use chrono::NaiveDateTime;
 use log::{debug, error, trace};
 use std::process::Command;
+use std::fmt::{self, Display, Debug};
 
 const IPMI_PATH: &str = "/usr/bin/ipmitool";
 const BMC_READ_POWER_CMD: &str = "dcmi power reading";
@@ -74,10 +75,7 @@ impl BMC {
     /// The method will panic if the command fails to run
     fn run_bmc_command(&self, bmc_command: &str) -> String {
         // Concatenate command with the credentials
-        let ipmi_args = format!(
-            "-H {} -U {} -P {} {}",
-            self.hostname, self.username, self.password, bmc_command
-        );
+        let ipmi_args = format!("{} {}", self, bmc_command);
         debug!("BMC command: {IPMI_PATH} {ipmi_args}");
 
         // process::Command requires arguments as an array
@@ -173,9 +171,9 @@ impl BMC {
         let parts: Vec<&str> = power_reading.trim().split_ascii_whitespace().collect();
         trace!("BMC::parse_number parts: {parts:#?}");
         assert!(!parts.is_empty());
-        let rc = parts[0].parse().expect("Failed to parse power reading");
-        trace!("BMC::parse_number -> {rc}");
-        rc
+        let n: u64 = parts[0].parse().expect("Failed to parse power reading");
+        trace!("BMC::parse_number -> {n}");
+        n
     }
 
     /// Parses a BMC date string into local time without timezone (`NaiveDateTime`)
@@ -263,6 +261,20 @@ impl BMC {
             is_active,
             power_limit,
         }
+    }
+}
+
+impl Display for BMC {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "-H {} -U {} -P {}",
+            self.hostname, self.username, self.username)
+    }
+}
+
+impl Debug for BMC {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "-H {} -U {} -P {}",
+            self.hostname, self.username, "****")
     }
 }
 

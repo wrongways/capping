@@ -1,7 +1,3 @@
 config/config.toml
-__pycache__/
-.mypy_cache/
-include/
-lib/
 target/
-*.csv
+stats/

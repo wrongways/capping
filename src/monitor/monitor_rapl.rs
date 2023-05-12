@@ -102,7 +102,7 @@ fn convert_energy_to_power(stats: &[RAPL_Readings]) -> Vec<RAPL_Readings> {
             let energy_delta_uj = reading.reading - stats[stat_index].readings[domain_index].reading;
             // time delta is always positive so no loss of sign
             #[allow(clippy::cast_sign_loss)]
-            let power_watts = energy_delta_uj / 1_000_000 / time_delta.num_seconds() as u64;
+            let power_watts = energy_delta_uj / time_delta.num_seconds() as u64;
             power_readings.push(RAPL_Reading {
                 domain: reading.domain,
                 reading: power_watts,

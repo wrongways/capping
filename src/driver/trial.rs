@@ -109,7 +109,7 @@ impl Trial {
         let n_threads = 0; // firestarter will use all available threads
         for idle_pct in 1..=2 {
             let load_pct = 100 - idle_pct;
-            for load_period_us in [100, 1000, 10_000] {
+            for load_period_us in [10_000, 20_000] {
                 self.run_test_scenario(load_pct, load_period_us, n_threads);
             }
         }

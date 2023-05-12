@@ -4,7 +4,7 @@ use log::trace;
 use std::collections::HashMap;
 use std::fmt::{self, Display, Formatter};
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 // There is one sub-directory of this directory for each RAPL domain - usually a
 // domain maps to a socket. For each domain energy readings for the core and memory
@@ -84,7 +84,7 @@ impl RAPL {
         let mut readings: Vec<RAPL_Reading> = Vec::new();
         for (pkg_core, label) in [(&self.core_paths, "core"), (&self.pkg_paths, "pkg")] {
             for (domain_id, path) in pkg_core.iter() {
-                let energy = RAPL::read_energy(&path);
+                let energy = RAPL::read_energy(path);
                 let domain = format!("{label}{domain_id}");
                 readings.push(RAPL_Reading::new(&domain, energy));
             }
@@ -95,7 +95,7 @@ impl RAPL {
     // class method
     /// Parse a RAPL path and extract the domain id.
     #[must_use]
-    fn domain_from_path(path: &PathBuf) -> u64 {
+    fn domain_from_path(path: &Path) -> u64 {
         path
             .file_name()
             .expect("RAPL failed to get directory name")

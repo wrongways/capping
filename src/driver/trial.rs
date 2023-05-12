@@ -110,9 +110,9 @@ impl Trial {
         self.set_initial_conditions();
         // because Rust doesn't have decreasing ranges, have to jump through hoops...
         let n_threads = 0; // firestarter will use all available threads
-        for idle_pct in 0..=2 {
+        for idle_pct in 0..=10 {
             let load_pct = 100 - idle_pct;
-            for load_period_us in [10_000, 20_000] {
+            for load_period_us in [10_000, 20_000, 50_000, 100_000] {
                 self.run_test_scenario(load_pct, load_period_us, n_threads);
                 thread::sleep(Duration::from_secs(INTER_TRIAL_WAIT_SECS));
             }
@@ -130,12 +130,12 @@ impl Trial {
         // As rust _still_ doesn't have decreasing ranges, jump through more hoops
         if core_count > 1 {
             // TODO: Could probably have a better algorithm here - if you've got 128
-            //       cores, then maybe don't have to run this 32 times to get a result.
+            //       cores, then maybe don't have to run this 17 times to get a result.
             //       but then again, maybe you do.
 
             // TODO for testing purposes only
-            let max_idle_threads = 2; // max(1, core_count / 4);
-            for idle_threads in 0..max_idle_threads {
+            let max_idle_threads = max(1, core_count / 8);
+            for idle_threads in 0..=max_idle_threads {
                 self.run_test_scenario(load_pct, load_period, core_count - idle_threads);
                 thread::sleep(Duration::from_secs(INTER_TRIAL_WAIT_SECS));
             }

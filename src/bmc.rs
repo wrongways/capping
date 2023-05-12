@@ -6,7 +6,7 @@ use std::fmt::{self, Display, Debug};
 const IPMI_PATH: &str = "/usr/bin/ipmitool";
 const BMC_READ_POWER_CMD: &str = "dcmi power reading";
 const BMC_CAP_SETTINGS_CMD: &str = "dcmi power get_limit";
-const BMC_SET_CAP_CMD: &str = "dcmi power set_limit limit 2000";
+const BMC_SET_CAP_CMD: &str = "dcmi power set_limit limit";
 const BMC_ACTIVATE_CAP_CMD: &str = "dcmi power activate";
 const BMC_DEACTIVATE_CAP_CMD: &str = "dcmi power deactivate";
 

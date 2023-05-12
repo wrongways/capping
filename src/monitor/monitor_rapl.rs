@@ -42,12 +42,12 @@ fn save_rapl_stats(stats: &[RAPL_Readings]) -> ResultType<PathBuf> {
     // Build the filename - append a timestamp and ".csv"
     let save_filename = format!(
         "{}_{}.csv",
-        CONFIGURATION.bmc_stats_filename_prefix,
+        CONFIGURATION.rapl_stats_filename_prefix,
         CONFIGURATION.test_timestamp
     );
 
     let save_path = Path::new(&CONFIGURATION.stats_dir).join(save_filename);
-    debug!("Saving stats to: {}", save_path.to_str().unwrap());
+    debug!("RAPL saving stats to: {}", save_path.to_str().unwrap());
 
     // Create buffered writer
     let handle = File::create(&save_path)?;
@@ -62,6 +62,8 @@ fn save_rapl_stats(stats: &[RAPL_Readings]) -> ResultType<PathBuf> {
 
     // remove the final extra comma
     domains.pop();
+    trace!("RAPL csv header: timestamp,{domains}");
+    trace!("RAPL writing {} records", stats.len());
 
     // ... and write to file
     writeln!(&mut writer, "timestamp,{domains}")?;

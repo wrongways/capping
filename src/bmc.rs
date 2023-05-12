@@ -76,7 +76,7 @@ impl BMC {
     fn run_command(&self, bmc_command: &str) -> String {
         // Concatenate command with the credentials
         let ipmi_args = format!("{self} {bmc_command}");
-        trace!("BMC running command: {ipmi_args}");
+        trace!("BMC running command: {self:?} {bmc_command}");
         // process::Command requires arguments as an array
         let ipmi_args: Vec<&str> = ipmi_args.split_whitespace().collect();
 

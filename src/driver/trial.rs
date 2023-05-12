@@ -12,6 +12,7 @@ use std::path::{Path, PathBuf};
 use std::thread::{self, JoinHandle};
 use std::time::Duration;
 
+const INTER_TRIAL_WAIT_SECS: u64 = 2; // pause between each trial to delineate in the graphs.
 
 /// The test driver - for any given test configuration from `../driver.rs` launch a
 /// campaign of tests with diminishing load. In parallel the bmc and rapl monitors
@@ -111,10 +112,11 @@ impl Trial {
         self.set_initial_conditions();
         // because Rust doesn't have decreasing ranges, have to jump through hoops...
         let n_threads = 0; // firestarter will use all available threads
-        for idle_pct in 1..=2 {
+        for idle_pct in 0..=2 {
             let load_pct = 100 - idle_pct;
             for load_period_us in [10_000, 20_000] {
                 self.run_test_scenario(load_pct, load_period_us, n_threads);
+                thread::sleep(Duration::from_secs(INTER_TRIAL_WAIT_SECS));
             }
         }
     }
@@ -137,6 +139,7 @@ impl Trial {
             let max_idle_threads = 2; // max(1, core_count / 4);
             for idle_threads in 0..max_idle_threads {
                 self.run_test_scenario(load_pct, load_period, core_count - idle_threads);
+                thread::sleep(Duration::from_secs(INTER_TRIAL_WAIT_SECS));
             }
         } else {
             info!("Can't run decreasing cores with only one core");
@@ -246,7 +249,7 @@ impl Trial {
             .expect("Failed to open driver log file");
         writeln!(
             log_file,
-            "{},{},{},{},{},{},{},{},{},{}",
+            "{},{},{},{},{},{},{},{},{},{},{},{}",
             self.start_time.to_rfc3339(),
             self.end_time.to_rfc3339(),
             self.cap_request_time.to_rfc3339(),
@@ -256,7 +259,9 @@ impl Trial {
             self.load_period_us,
             self.n_threads,
             self.capping_order,
-            self.capping_operation
+            self.capping_operation,
+            self.cap_from,
+            self.cap_to
         )?;
         Ok(())
     }
@@ -280,7 +285,9 @@ impl Trial {
             load_period,\
             n_threads,\
             capping_order,\
-            capping_operation"
+            capping_operation,\
+            cap_from,\
+            cap_to"
         )?;
 
         Ok(())

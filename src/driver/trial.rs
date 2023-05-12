@@ -54,7 +54,11 @@ impl Trial {
             cap_to,
             capping_order,
             capping_operation,
-            bmc: BMC::new("host", "user", "pass"),
+            bmc: BMC::new(
+                &CONFIGURATION.bmc_hostname,
+                &CONFIGURATION.bmc_username,
+                &CONFIGURATION.bmc_password,
+            ),
             total_runtime_secs: CONFIGURATION.test_time_secs + CONFIGURATION.warmup_secs,
             warmup_secs: CONFIGURATION.warmup_secs,
             load_pct: 0,
@@ -195,7 +199,8 @@ impl Trial {
         let capping_order = self.capping_order;
         let capping_operation = self.capping_operation;
 
-        let bmc = BMC::new(&self.bmc.hostname, &self.bmc.username, &self.bmc.password);
+        // create a temporary BMC instance to move into thread
+        let capping_bmc = BMC::new(&self.bmc.hostname, &self.bmc.username, &self.bmc.password);
 
         // There is NO semicolon at the end of this lot, because this thread join handle is the
         // return value to the do_cap_operation method. The thread itself returns its own runtime duration
@@ -206,14 +211,14 @@ impl Trial {
                     // The capping level is set by set_initial_conditions
                     // just need to perform the operation
                     match capping_operation {
-                        CappingOperation::Activate => bmc.activate_power_cap(),
-                        CappingOperation::Deactivate => bmc.deactivate_power_cap(),
+                        CappingOperation::Activate => capping_bmc.activate_power_cap(),
+                        CappingOperation::Deactivate => capping_bmc.deactivate_power_cap(),
                     }
                 }
                 CappingOrder::LevelAfterActivate => {
                     // The main driver ensures that the capping operation is "Activate"
                     // as there's no sense in setting a cap when capping is deactivated
-                    bmc.set_cap_power_level(cap_to);
+                    capping_bmc.set_cap_power_level(cap_to);
                 }
             }
             // Thread returns its execution time

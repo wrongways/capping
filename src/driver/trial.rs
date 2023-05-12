@@ -110,7 +110,7 @@ impl Trial {
         self.set_initial_conditions();
         // because Rust doesn't have decreasing ranges, have to jump through hoops...
         let n_threads = 0; // firestarter will use all available threads
-        for idle_pct in 0..=10 {
+        for idle_pct in 0..=20 {
             let load_pct = 100 - idle_pct;
             for load_period_us in [10_000, 20_000, 50_000, 100_000] {
                 self.run_test_scenario(load_pct, load_period_us, n_threads);

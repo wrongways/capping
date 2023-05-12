@@ -133,8 +133,7 @@ impl Trial {
             //       cores, then maybe don't have to run this 17 times to get a result.
             //       but then again, maybe you do.
 
-            // TODO for testing purposes only
-            let max_idle_threads = max(1, core_count / 8);
+            let max_idle_threads = max(1, core_count / 4);
             for idle_threads in 0..=max_idle_threads {
                 self.run_test_scenario(load_pct, load_period, core_count - idle_threads);
                 thread::sleep(Duration::from_secs(INTER_TRIAL_WAIT_SECS));
@@ -152,7 +151,19 @@ impl Trial {
         self.load_pct = load_pct;
         self.load_period_us = load_period_us;
         self.n_threads = n_threads;
-        trace!("Test scenario: load: {load_pct}, load period µs: {load_period_us}, n_threads: {n_threads}");
+        trace!("\
+            Test scenario: load: {load_pct}, \
+            load period µs: {load_period_us}, \
+            n_threads: {n_threads}, \
+            cap_from: {}, \
+            cap_to: {}, \
+            capping_order: {}, \
+            capping_operation: {}",
+            self.cap_from,
+            self.cap_to,
+            self.capping_order,
+            self.capping_operation
+        );
         self.start_time = Local::now();
         let firestarter =
             Firestarter::new(self.total_runtime_secs, load_pct, load_period_us, n_threads);

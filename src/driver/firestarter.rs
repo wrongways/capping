@@ -1,5 +1,4 @@
-use log::{error, trace, debug};
-use std::env;
+use log::{error, trace};
 use std::fmt::{self, Display, Formatter};
 use std::process::Command;
 
@@ -35,23 +34,13 @@ impl Firestarter {
     // TODO: Might be pertinent to bind threads to processors to see if there's
     //       uneven capping across domains.
     pub fn run(&self) {
-        // If it's a dry run only run at light load
-        let real_capping_load:u64 = if let Ok(n) = env::var("CAPPING_DRY_RUN") {
-            debug!("Found CAPPING_DRY_RUN = {n}");
-            n.parse().expect("Failed to parse CAPPING_DRY_RUN to u64")
-        } else {
-            debug!("CAPPING_DRY_RUN not set, using real load_pct");
-            self.load_pct
-        };
-
-
         trace!("FIRESTARTER LAUNCHING:\n{self}");
         let firestarter = Command::new(&self.path)
             .arg("--quiet")
             .arg("--timeout")
             .arg(self.runtime_secs.to_string())
             .arg("--load")
-            .arg(real_capping_load.to_string())
+            .arg(self.load_pct.to_string())
             .arg("--period")
             .arg(self.load_period_us.to_string())
             .arg("--threads")

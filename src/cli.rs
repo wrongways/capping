@@ -79,11 +79,11 @@ impl Configuration {
 #[command(author, version, about, long_about=None)]
 struct CLI {
     // Passing default values here for the tests - to to deleted
-    #[arg(long, short = 'H', name = "host", default_value = "host")]
+    #[arg(long, short = 'H', name = "host")]
     bmc_hostname: String,
-    #[arg(long, short = 'U', name = "user", default_value = "user")]
+    #[arg(long, short = 'U', name = "user")]
     bmc_username: String,
-    #[arg(long, short = 'P', name = "passwd", default_value = "pass")]
+    #[arg(long, short = 'P', name = "password")]
     bmc_password: String,
     #[arg(
         long,
@@ -95,7 +95,7 @@ struct CLI {
     #[arg(
         long,
         short,
-        default_value_t = 5,
+        default_value_t = 7,
         name = "test time seconds",
         help = "Number of seconds to wait after applying a cap before testing if cap has been applied. "
     )]
@@ -103,7 +103,7 @@ struct CLI {
     #[arg(
         long = "cap_low",
         short = 'w',
-        default_value_t = 300,
+        default_value_t = 600,
         name = "low watts",
         help = "Number of Watts for setting a low cap"
     )]
@@ -111,7 +111,7 @@ struct CLI {
     #[arg(
         long = "cap_high",
         short = 'W',
-        default_value_t = 3000,
+        default_value_t = 2000,
         name = "high watts",
         help = "Number of Watts for setting a high cap, used before setting a low cap"
     )]

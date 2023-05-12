@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 use std::thread::{self, JoinHandle};
 use std::time::Duration;
 
-const INTER_TRIAL_WAIT_SECS: u64 = 2; // pause between each trial to delineate in the graphs.
+const INTER_TRIAL_WAIT_SECS: u64 = 1; // pause between each trial to delineate in the graphs.
 
 /// The test driver - for any given test configuration from `../driver.rs` launch a
 /// campaign of tests with diminishing load. In parallel the bmc and rapl monitors

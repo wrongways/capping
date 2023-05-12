@@ -1,6 +1,7 @@
 use chrono::{DateTime, Local, SecondsFormat};
 use glob::glob;
 use log::{error, trace};
+use std::collections::HashMap;
 use std::fmt::{self, Display, Formatter};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -10,14 +11,16 @@ use std::path::{Path, PathBuf};
 // are available in sub-domains. The assumption, based on anecdotal evidence only,
 // is that sub-domain 0 is the processor core. A more rigorous approach would read
 // the name of each sub-domain to identify each part. For future work perhaps?
-const RAPL_DIR: &str = "/sys/devices/virtual/powercap/intel-rapl/";
+const RAPL_GLOB: &str = "/sys/devices/virtual/powercap/intel-rapl/intel-rapl:*";
+
 
 
 // Holds the concrete (non-globbed) RAPL paths
 #[derive(Debug)]
 pub struct RAPL {
     /// A list of fully-qualified paths for the core energy files for every domain.
-    rapl_paths: Vec<PathBuf>,
+    pkg_paths: HashMap<u64, PathBuf>,
+    core_paths: HashMap<u64, PathBuf>,
 }
 
 impl Default for RAPL {
@@ -27,10 +30,10 @@ impl Default for RAPL {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct RAPL_Reading {
     /// domain id: 0, 1, 2,...
-    pub domain: u64,
+    pub domain: String,
     /// The reading. For the RAPL object, this reading is in µJ.
     /// The structure is also used in `monitor/monitor_rapl.rs` when converting energy to
     /// power, with units in Watts.
@@ -48,23 +51,26 @@ pub struct RAPL_Readings {
 impl RAPL {
     #[must_use]
     pub fn new() -> Self {
+        let mut pkg_paths = HashMap::new();
+        let mut core_paths = HashMap::new();
+
         // This glob pattern picks up all the energy files for the "core" energy
         // for all of the available domains (i.e. sockets) in the server
-        // The shell glob is is limited (no regex). The contents of the two starred fields
-        // should be identical (this is not checked)
-        const RAPL_CORE_GLOB: &str = "intel-rapl:*/intel-rapl:*:0/energy_uj";
+        for glob_result in glob(RAPL_GLOB).expect("RAPL failed to glob directory") {
+            let path = glob_result.expect("RAPL failed to read rapl directory");
+            let domain = RAPL::domain_from_path(&path);
+            pkg_paths.insert(domain, path.join("energy_uj"));
 
-        let rapl_glob = RAPL_DIR.to_owned() + RAPL_CORE_GLOB;
-        let mut paths = Vec::<PathBuf>::new();
-        for path in glob(&rapl_glob).expect("RAPL failed to get rapl virtual device") {
-            match path {
-                Ok(p) => paths.push(p),
-                Err(e) => error!("Failed to load RAPL path: {}", e),
-            }
+            let core_dir = path.file_name()
+                .expect("Failed to get rapl dir")
+                .to_string_lossy()
+                .to_string() + ":0";
+            core_paths.insert(domain, path.join(core_dir).join("energy_uj"));
         }
-        trace!("RAPL paths: {:#?}", paths);
 
-        Self { rapl_paths: paths }
+        trace!("RAPL pkg_paths: {pkg_paths:?}");
+        trace!("RAPL core_paths: {core_paths:?}");
+        Self { pkg_paths, core_paths }
     }
 
     /// `read_current_energy`
@@ -73,15 +79,12 @@ impl RAPL {
     #[must_use]
     pub fn read_current_energy(&self) -> RAPL_Readings {
         let mut readings: Vec<RAPL_Reading> = Vec::new();
-        for path_buf in &self.rapl_paths {
-            let path = path_buf.as_path();
-            let energy: u64 = fs::read_to_string(path)
-                .expect("Failed to read energy file")
-                .trim()
-                .parse()
-                .expect("Failed to parse energy reading");
-            let reading = RAPL_Reading::new(RAPL::domain_from_path(path), energy);
-            readings.push(reading);
+        for (pkg_core, label) in [(&self.core_paths, "core"), (&self.pkg_paths, "pkg")] {
+            for (domain_id, path) in pkg_core.iter() {
+                let energy = RAPL::read_energy(&path);
+                let domain = format!("{label}_{domain_id}");
+                readings.push(RAPL_Reading::new(&domain, energy));
+            }
         }
         RAPL_Readings::new(readings)
     }
@@ -89,26 +92,32 @@ impl RAPL {
     // class method
     /// Parse a RAPL path and extract the domain id.
     #[must_use]
-    pub fn domain_from_path(path: &Path) -> u64 {
-        path.parent()
-            .expect("No parent found")
+    fn domain_from_path(path: &PathBuf) -> u64 {
+        path
             .file_name()
-            .expect("Failed to get parent directory name")
-            .to_os_string()
-            .into_string()
-            .expect("Failed to convert path into string")
+            .expect("RAPL failed to get directory name")
+            .to_string_lossy()
+            .to_string()
             .split(':')
             .nth(1)
             .expect("Didn't find a colon separator in path")
             .parse::<u64>()
             .expect("Didn't find a number after the first colon")
     }
+
+    fn read_energy(path: &PathBuf) -> u64 {
+        fs::read_to_string(path)
+        .expect("Failed to read energy file")
+        .trim()
+        .parse()
+        .expect("Failed to parse energy reading")
+    }
 }
 
 impl RAPL_Reading {
     #[must_use]
-    pub fn new(domain: u64, reading: u64) -> Self {
-        Self { domain, reading }
+    pub fn new(domain: &str, reading: u64) -> Self {
+        Self { domain: String::from(domain), reading }
     }
 }
 
@@ -136,7 +145,7 @@ impl Display for RAPL_Readings {
         let mut readings: String = self
             .readings
             .iter()
-            .map(|&reading| reading.to_string() + ",")
+            .map(|reading| reading.to_string() + ",")
             .collect();
 
         // remove the extra comma
@@ -156,23 +165,15 @@ mod tests {
     use super::*;
     #[test]
     fn test_domain0_from_path() {
-        let rapl_filename = RAPL_DIR.to_owned() + "intel-rapl:0/intel-rapl:0:0/energy_uj";
+        let rapl_filename = "/sys/devices/virtual/powercap/intel-rapl/intel-rapl:0";
         let mut rapl_path = PathBuf::new();
         rapl_path.push(rapl_filename);
         assert_eq!(RAPL::domain_from_path(&rapl_path), 0);
     }
 
     #[test]
-    fn test_domain1_from_path() {
-        let rapl_filename = RAPL_DIR.to_owned() + "intel-rapl:1/intel-rapl:1:0/energy_uj";
-        let mut rapl_path = PathBuf::new();
-        rapl_path.push(rapl_filename);
-        assert_eq!(RAPL::domain_from_path(&rapl_path), 1);
-    }
-
-    #[test]
     fn test_domain16_from_path() {
-        let rapl_filename = RAPL_DIR.to_owned() + "intel-rapl:16/intel-rapl:16:0/energy_uj";
+        let rapl_filename = "/sys/devices/virtual/powercap/intel-rapl/intel-rapl:16";
         let mut rapl_path = PathBuf::new();
         rapl_path.push(rapl_filename);
         assert_eq!(RAPL::domain_from_path(&rapl_path), 16);

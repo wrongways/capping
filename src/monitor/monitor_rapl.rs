@@ -98,7 +98,7 @@ fn convert_energy_to_power(stats: &[RAPL_Readings]) -> Vec<RAPL_Readings> {
             #[allow(clippy::cast_sign_loss)]
             let power_watts = energy_delta_uj / time_delta.num_milliseconds() as u64;
             power_readings.push(RAPL_Reading {
-                domain: reading.domain,
+                domain: reading.domain.clone(),
                 reading: power_watts,
             });
         }
@@ -116,16 +116,16 @@ mod tests {
 
     #[test]
     fn test_energy_to_power() {
-        let r1 = RAPL_Reading {domain: 0, reading: 0};
-        let r2 = RAPL_Reading {domain: 1, reading: 0};
-        let r3 = RAPL_Reading {domain: 0, reading: 100_000_000};
-        let r4 = RAPL_Reading {domain: 1, reading:  50_000_000};
-        let r5 = RAPL_Reading {domain: 0, reading: 200_000_000};
-        let r6 = RAPL_Reading {domain: 1, reading: 100_000_000};
-        let r7 = RAPL_Reading {domain: 0, reading: 200_000_000};
-        let r8 = RAPL_Reading {domain: 1, reading: 100_000_000};
-        let r9 = RAPL_Reading {domain: 0, reading: 400_000_000};
-        let r10 = RAPL_Reading {domain: 1, reading: 200_000_000};
+        let r1 = RAPL_Reading {domain: String::from("0"), reading: 0};
+        let r2 = RAPL_Reading {domain: String::from("1"), reading: 0};
+        let r3 = RAPL_Reading {domain: String::from("0"), reading: 100_000_000};
+        let r4 = RAPL_Reading {domain: String::from("1"), reading:  50_000_000};
+        let r5 = RAPL_Reading {domain: String::from("0"), reading: 200_000_000};
+        let r6 = RAPL_Reading {domain: String::from("1"), reading: 100_000_000};
+        let r7 = RAPL_Reading {domain: String::from("0"), reading: 200_000_000};
+        let r8 = RAPL_Reading {domain: String::from("1"), reading: 100_000_000};
+        let r9 = RAPL_Reading {domain: String::from("0"), reading: 400_000_000};
+        let r10 = RAPL_Reading {domain: String::from("1"), reading: 200_000_000};
 
         let t0 = Local::now();
         let t1 = t0 + chrono::Duration::milliseconds(1000);

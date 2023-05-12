@@ -1,5 +1,5 @@
 use chrono::NaiveDateTime;
-use log::error;
+use log::{trace, error};
 use std::process::Command;
 use std::fmt::{self, Display, Debug};
 
@@ -60,7 +60,7 @@ impl BMC {
         }
     }
 
-    /// `run_bmc_command`
+    /// `run_command`
     ///
     /// Executes an IPMI command to run an operation on a BMC. It uses the BMC credentials configured
     /// when the self instance was created.
@@ -73,10 +73,10 @@ impl BMC {
     ///
     /// # Panics
     /// The method will panic if the command fails to run
-    fn run_bmc_command(&self, bmc_command: &str) -> String {
+    fn run_command(&self, bmc_command: &str) -> String {
         // Concatenate command with the credentials
         let ipmi_args = format!("{self}, {bmc_command}");
-
+        trace!("BMC running command: {ipmi_args}");
         // process::Command requires arguments as an array
         let ipmi_args: Vec<&str> = ipmi_args.split_whitespace().collect();
 
@@ -87,20 +87,20 @@ impl BMC {
                 let stderr = String::from_utf8_lossy(&out.stderr);
 
                 if stderr.len() > 0 {
-                    error!("Problem running BMC read_power() command: {}", &stderr);
+                    error!("BMC run_command() stderr: {stderr}");
                 }
 
                 String::from(stdout)
             }
             Err(e) => {
                 error!(
-                    "Failed to execute command: {} {}: {:?}",
+                    "BMC Failed to execute command: {} {}: {:?}",
                     IPMI_PATH,
                     &ipmi_args.join(","),
                     e
                 );
                 panic!(
-                    "Can't run command: {} {}: {e:?}",
+                    "BMC Can't run command: {} {}: {e:?}",
                     IPMI_PATH,
                     &ipmi_args.join(",")
                 );
@@ -112,7 +112,7 @@ impl BMC {
     /// Returns the current cap power limit and activation state in a `CapSetting` struct
     #[must_use]
     pub fn current_cap_settings(&self) -> BMC_CapSetting {
-        let bmc_output = self.run_bmc_command(BMC_CAP_SETTINGS_CMD);
+        let bmc_output = self.run_command(BMC_CAP_SETTINGS_CMD);
         BMC::parse_cap_settings(&bmc_output)
     }
 
@@ -128,23 +128,23 @@ impl BMC {
 
     pub fn set_cap_power_level(&self, cap: u64) {
         let cap_cmd = format!("{BMC_SET_CAP_CMD} {cap}");
-        self.run_bmc_command(&cap_cmd);
+        self.run_command(&cap_cmd);
         // TODO: check the output
     }
 
     pub fn activate_power_cap(&self) {
-        self.run_bmc_command(BMC_ACTIVATE_CAP_CMD);
+        self.run_command(BMC_ACTIVATE_CAP_CMD);
     }
 
     pub fn deactivate_power_cap(&self) {
-        self.run_bmc_command(BMC_DEACTIVATE_CAP_CMD);
+        self.run_command(BMC_DEACTIVATE_CAP_CMD);
     }
 
 
     // Power management
     #[must_use]
     pub fn current_power(&self) -> u64 {
-        let bmc_output = self.run_bmc_command(BMC_READ_POWER_CMD);
+        let bmc_output = self.run_command(BMC_READ_POWER_CMD);
         BMC::parse_power_reading(&bmc_output).instant
     }
 

@@ -1,10 +1,10 @@
 use chrono::{DateTime, Local, SecondsFormat};
 use glob::glob;
-use log::{error, trace};
+use log::trace;
 use std::collections::HashMap;
 use std::fmt::{self, Display, Formatter};
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 // There is one sub-directory of this directory for each RAPL domain - usually a
 // domain maps to a socket. For each domain energy readings for the core and memory
@@ -29,10 +29,11 @@ impl Default for RAPL {
     }
 }
 
+/// Holds the energy reading for a package or core for a given socket (domain)
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone)]
 pub struct RAPL_Reading {
-    /// domain id: 0, 1, 2,...
+    /// domain id: "core0", "core1", "pkg1", "pkg2",...
     pub domain: String,
     /// The reading. For the RAPL object, this reading is in µJ.
     /// The structure is also used in `monitor/monitor_rapl.rs` when converting energy to
@@ -40,6 +41,8 @@ pub struct RAPL_Reading {
     pub reading: u64,
 }
 
+
+/// A timestamped collection of energy readings for package and cores on all sockets
 #[allow(non_camel_case_types)]
 #[derive(Debug)]
 pub struct RAPL_Readings {
@@ -82,7 +85,7 @@ impl RAPL {
         for (pkg_core, label) in [(&self.core_paths, "core"), (&self.pkg_paths, "pkg")] {
             for (domain_id, path) in pkg_core.iter() {
                 let energy = RAPL::read_energy(&path);
-                let domain = format!("{label}_{domain_id}");
+                let domain = format!("{label}{domain_id}");
                 readings.push(RAPL_Reading::new(&domain, energy));
             }
         }

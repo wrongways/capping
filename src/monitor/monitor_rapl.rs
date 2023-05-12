@@ -90,7 +90,7 @@ fn convert_energy_to_power(stats: &[RAPL_Readings]) -> Vec<RAPL_Readings> {
         let mut power_readings: Vec<RAPL_Reading> = Vec::with_capacity(n_domains);
         let time_delta = stat.timestamp - stats[stat_index].timestamp;
         let time_midpoint = stat.timestamp - (time_delta / 2);
-        trace!("monitor rapl: convert_energy_to_power(): time delta: {time_delta}");
+
         // Loop over the domains
         for (domain_index, reading) in stat.readings.iter().enumerate() {
             let energy_delta_uj = reading.reading - stats[stat_index].readings[domain_index].reading;

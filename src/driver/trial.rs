@@ -39,8 +39,6 @@ pub struct Trial {
     cap_request_time: DateTime<Local>,
     capping_thread_did_complete: bool,
     time_to_cap: chrono::Duration,
-
-    // TODO: Add start/stop timestamps
 }
 
 impl Trial {

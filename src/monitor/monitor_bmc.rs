@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 use std::sync::mpsc::Receiver;
 use std::thread;
 use std::time::Duration;
-use chrono::{DateTime, Local};
+use chrono::{DateTime, Local, SecondsFormat};
 
 #[allow(non_camel_case_types)]
 #[derive(Debug)]
@@ -26,7 +26,7 @@ impl fmt::Display for BMC_Stats {
         write!(
             f,
             "{},{},{},{}",
-            self.timestamp.to_rfc3339(),
+            self.timestamp.to_rfc3339_opts(SecondsFormat::Millis, true),
             self.power,
             self.cap_level,
             self.cap_is_active,

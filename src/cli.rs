@@ -1,5 +1,6 @@
 use ::clap::Parser;
 use lazy_static::lazy_static;
+use chrono::Local;
 
 const BMC_STATS_FILENAME_PREFIX: &str = "bmc_stats";
 const RAPL_STATS_FILENAME_PREFIX: &str = "rapl_stats";
@@ -39,11 +40,15 @@ pub struct Configuration {
     pub rapl_stats_filename_prefix: String,
     pub driver_log_filename_prefix: String,
     pub monitor_poll_freq_hz: u64,
+    pub test_timestamp: String,
 }
 
 impl Configuration {
     fn new() -> Self {
         let args = CLI::parse();
+        let timestamp_format = "%y%m%d_%H%M";
+        let test_timestamp = Local::now().format(timestamp_format).to_string();
+
         Configuration {
             bmc_hostname: args.bmc_hostname,
             bmc_username: args.bmc_username,
@@ -57,6 +62,7 @@ impl Configuration {
             rapl_stats_filename_prefix: String::from(RAPL_STATS_FILENAME_PREFIX),
             driver_log_filename_prefix: String::from(DRIVER_LOG_FILENAME_PREFIX),
             monitor_poll_freq_hz: MONITOR_POLL_FREQ_HZ,
+            test_timestamp,
         }
     }
 }

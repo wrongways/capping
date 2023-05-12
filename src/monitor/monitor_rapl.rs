@@ -1,7 +1,6 @@
 use crate::cli::CONFIGURATION;
 use crate::rapl::{RAPL_Readings, RAPL_Reading, RAPL};
 use crate::ResultType;
-use chrono::{self, DateTime, Local};
 use log::debug;
 use log::{info, trace};
 use std::fs::File;
@@ -41,12 +40,10 @@ pub fn monitor_rapl(rx: &Receiver<()>) {
 /// Writes the RAPL stats to CSV file.
 fn save_rapl_stats(stats: &[RAPL_Readings]) -> ResultType<PathBuf> {
     // Build the filename - append a timestamp and ".csv"
-    let timestamp: DateTime<Local> = Local::now();
-
     let save_filename = format!(
         "{}_{}.csv",
         CONFIGURATION.bmc_stats_filename_prefix,
-        timestamp.format("%y%m%d_%H%M")
+        CONFIGURATION.test_timestamp
     );
 
     let save_path = Path::new(&CONFIGURATION.stats_dir).join(save_filename);
@@ -120,6 +117,8 @@ fn convert_energy_to_power(stats: &[RAPL_Readings]) -> Vec<RAPL_Readings> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use chrono::Local;
+
 
     #[test]
     fn test_energy_to_power() {

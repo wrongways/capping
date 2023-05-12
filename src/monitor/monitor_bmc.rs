@@ -95,9 +95,10 @@ pub fn monitor_bmc(rx: &Receiver<()>) {
 /// Returns the constructed path in a Result<>.
 fn save_bmc_stats(stats: &[BMC_Stats]) -> ResultType<PathBuf> {
     // Build a timestamped csv filename
-    let timestamp_format = "%y%m%d_%H%M";
-    let timestamp = Local::now().format(timestamp_format).to_string();
-    let filename = format!("{}_{timestamp}.csv", CONFIGURATION.bmc_stats_filename_prefix);
+    let filename = format!("{}_{}.csv",
+        CONFIGURATION.bmc_stats_filename_prefix,
+        CONFIGURATION.test_timestamp
+    );
     let filepath = Path::new(&CONFIGURATION.stats_dir).join(filename);
     debug!("Saving stats to: {filepath:?}");
 

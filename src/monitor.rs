@@ -1,7 +1,7 @@
 mod monitor_bmc;
 mod monitor_rapl;
 
-use log::trace;
+use log::{trace, debug};
 use std::sync::mpsc::{self, Receiver};
 use std::thread;
 
@@ -15,7 +15,7 @@ use std::thread;
 /// # Arguments
 /// * `rx` - the receiving end of a channel with the main thread
 pub fn monitor(rx: &Receiver<()>) {
-    trace!("MONITOR: starting");
+    debug!("MONITOR: starting");
 
     let (rapl_tx, rapl_rx) = mpsc::channel();
     let (bmc_tx, bmc_rx) = mpsc::channel();
@@ -36,5 +36,5 @@ pub fn monitor(rx: &Receiver<()>) {
             .join()
             .expect("Monitor driver failed to join children");
     }
-    trace!("MONITOR: children halted, exiting");
+    debug!("MONITOR: children halted, exiting");
 }

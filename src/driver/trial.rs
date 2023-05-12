@@ -224,7 +224,15 @@ impl Trial {
     fn log_results(&self) -> Result<(), std::io::Error>  {
         // Build log-file path, create the file and write a csv header
         let log_file_path = Trial::make_csv_logfile_path();
-        Trial::create_csv_file(&log_file_path).expect("Failed to create driver log file");
+        trace!("Writing results to: {log_file_path:?}");
+        if log_file_path.exists() {
+            trace!("Log file exists...");
+        } else {
+            trace!("Log file doesn't exist, creating...");
+            Trial::create_csv_file(&log_file_path).expect("Failed to create driver log file");
+        }
+
+
 
         // Save the trail run's results
         let mut log_file = OpenOptions::new()
@@ -276,13 +284,10 @@ impl Trial {
 
     /// Build the filename - append a timestamp and ".csv"
     fn make_csv_logfile_path() -> PathBuf {
-
-        let timestamp: DateTime<Local> = Local::now();
-        let timestamp_format = "%y%m%d_%H%M";
         let save_filename = format!("{}_{}.csv",
-            &CONFIGURATION.driver_log_filename_prefix,
-            timestamp.format(timestamp_format));
+            CONFIGURATION.driver_log_filename_prefix,
+            CONFIGURATION.test_timestamp);
 
-        Path::new(&*CONFIGURATION.stats_dir).join(save_filename)
+        Path::new(&CONFIGURATION.stats_dir).join(save_filename)
     }
 }

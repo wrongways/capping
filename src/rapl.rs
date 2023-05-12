@@ -81,12 +81,9 @@ impl RAPL {
                 .parse()
                 .expect("Failed to parse energy reading");
             let reading = RAPL_Reading::new(RAPL::domain_from_path(path), energy);
-            trace!("Read energy value: {:?}", &reading);
             readings.push(reading);
         }
-        let readings = RAPL_Readings::new(readings);
-        trace!("Energy readings: {readings:?}");
-        readings
+        RAPL_Readings::new(readings)
     }
 
     // class method

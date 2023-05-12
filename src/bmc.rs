@@ -75,7 +75,7 @@ impl BMC {
     /// The method will panic if the command fails to run
     fn run_bmc_command(&self, bmc_command: &str) -> String {
         // Concatenate command with the credentials
-        let ipmi_args = format!("{} {}", self, bmc_command);
+        let ipmi_args = format!("{self}, {bmc_command}");
 
         // process::Command requires arguments as an array
         let ipmi_args: Vec<&str> = ipmi_args.split_whitespace().collect();
@@ -264,8 +264,8 @@ impl Display for BMC {
 
 impl Debug for BMC {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "-H {} -U {} -P {}",
-            self.hostname, self.username, "****")
+        write!(f, "-H {} -U {} -P ****",
+            self.hostname, self.username)
     }
 }
 

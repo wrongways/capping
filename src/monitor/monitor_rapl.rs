@@ -96,13 +96,13 @@ fn convert_energy_to_power(stats: &[RAPL_Readings]) -> Vec<RAPL_Readings> {
         let mut power_readings: Vec<RAPL_Reading> = Vec::with_capacity(n_domains);
         let time_delta = stat.timestamp - stats[stat_index].timestamp;
         let time_midpoint = stat.timestamp - (time_delta / 2);
-
+        trace!("monitor rapl: convert_energy_to_power(): time delta: {time_delta}");
         // Loop over the domains
         for (domain_index, reading) in stat.readings.iter().enumerate() {
             let energy_delta_uj = reading.reading - stats[stat_index].readings[domain_index].reading;
             // time delta is always positive so no loss of sign
             #[allow(clippy::cast_sign_loss)]
-            let power_watts = energy_delta_uj / time_delta.num_seconds() as u64;
+            let power_watts = energy_delta_uj as f64 / time_delta.num_microseconds().expect("failed to get delta µS") as f64;
             power_readings.push(RAPL_Reading {
                 domain: reading.domain,
                 reading: power_watts,
@@ -122,16 +122,16 @@ mod tests {
 
     #[test]
     fn test_energy_to_power() {
-        let r1 = RAPL_Reading {domain: 0, reading: 0};
-        let r2 = RAPL_Reading {domain: 1, reading: 0};
-        let r3 = RAPL_Reading {domain: 0, reading: 100_000_000};
-        let r4 = RAPL_Reading {domain: 1, reading:  50_000_000};
-        let r5 = RAPL_Reading {domain: 0, reading: 200_000_000};
-        let r6 = RAPL_Reading {domain: 1, reading: 100_000_000};
-        let r7 = RAPL_Reading {domain: 0, reading: 200_000_000};
-        let r8 = RAPL_Reading {domain: 1, reading: 100_000_000};
-        let r9 = RAPL_Reading {domain: 0, reading: 400_000_000};
-        let r10 = RAPL_Reading {domain: 1, reading: 200_000_000};
+        let r1 = RAPL_Reading {domain: 0, reading: 0.0};
+        let r2 = RAPL_Reading {domain: 1, reading: 0.0};
+        let r3 = RAPL_Reading {domain: 0, reading: 100_000_000.0};
+        let r4 = RAPL_Reading {domain: 1, reading:  50_000_000.0};
+        let r5 = RAPL_Reading {domain: 0, reading: 200_000_000.0};
+        let r6 = RAPL_Reading {domain: 1, reading: 100_000_000.0};
+        let r7 = RAPL_Reading {domain: 0, reading: 200_000_000.0};
+        let r8 = RAPL_Reading {domain: 1, reading: 100_000_000.0};
+        let r9 = RAPL_Reading {domain: 0, reading: 400_000_000.0};
+        let r10 = RAPL_Reading {domain: 1, reading: 200_000_000.0};
 
         let t0 = Local::now();
         let t1 = t0 + chrono::Duration::milliseconds(1000);
@@ -151,14 +151,14 @@ mod tests {
         assert_eq!(power_stats.len(), energy_stats.len() - 1);
 
         // check power
-        assert_eq!(power_stats[0].readings[0].reading, 100);
-        assert_eq!(power_stats[0].readings[1].reading,  50);
-        assert_eq!(power_stats[1].readings[0].reading, 100);
-        assert_eq!(power_stats[1].readings[1].reading,  50);
-        assert_eq!(power_stats[2].readings[0].reading,   0);
-        assert_eq!(power_stats[2].readings[1].reading,   0);
-        assert_eq!(power_stats[3].readings[0].reading, 100);
-        assert_eq!(power_stats[3].readings[1].reading,  50);
+        assert_eq!(power_stats[0].readings[0].reading, 100.0);
+        assert_eq!(power_stats[0].readings[1].reading,  50.0);
+        assert_eq!(power_stats[1].readings[0].reading, 100.0);
+        assert_eq!(power_stats[1].readings[1].reading,  50.0);
+        assert_eq!(power_stats[2].readings[0].reading,   0.0);
+        assert_eq!(power_stats[2].readings[1].reading,   0.0);
+        assert_eq!(power_stats[3].readings[0].reading, 100.0);
+        assert_eq!(power_stats[3].readings[1].reading,  50.0);
 
         // check timestamps
         assert_eq!(power_stats[0].timestamp, t0 + chrono::Duration::milliseconds(500));

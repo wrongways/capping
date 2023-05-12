@@ -34,7 +34,7 @@ pub struct RAPL_Reading {
     /// The reading. For the RAPL object, this reading is in µJ.
     /// The structure is also used in `monitor/monitor_rapl.rs` when converting energy to
     /// power, with units in Watts.
-    pub reading: u64,
+    pub reading: f64,
 }
 
 #[allow(non_camel_case_types)]
@@ -75,7 +75,7 @@ impl RAPL {
         let mut readings: Vec<RAPL_Reading> = Vec::new();
         for path_buf in &self.rapl_paths {
             let path = path_buf.as_path();
-            let energy: u64 = fs::read_to_string(path)
+            let energy: f64 = fs::read_to_string(path)
                 .expect("Failed to read energy file")
                 .trim()
                 .parse()
@@ -107,7 +107,7 @@ impl RAPL {
 
 impl RAPL_Reading {
     #[must_use]
-    pub fn new(domain: u64, reading: u64) -> Self {
+    pub fn new(domain: u64, reading: f64) -> Self {
         Self { domain, reading }
     }
 }

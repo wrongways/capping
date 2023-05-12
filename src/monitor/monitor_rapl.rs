@@ -53,7 +53,7 @@ fn save_rapl_stats(stats: &[RAPL_Readings]) -> ResultType<PathBuf> {
     let handle = File::create(&save_path)?;
     let mut writer = BufWriter::new(handle);
     trace!("RAPL writing {} records", stats.len());
-    let csv_header = "timestamp,domain,power_watts";
+    let csv_header = "timestamp,domain,power_mW";
     writeln!(&mut writer, "{csv_header}")?;
 
     // Rather than recording the raw energy values, calculate the power for each domain

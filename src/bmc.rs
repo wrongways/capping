@@ -2,8 +2,8 @@ use chrono::NaiveDateTime;
 use log::{trace, error};
 use std::process::Command;
 use std::fmt::{self, Display, Debug};
+use crate::cli::CONFIGURATION;
 
-const IPMI_PATH: &str = "/usr/bin/ipmitool";
 const BMC_READ_POWER_CMD: &str = "dcmi power reading";
 const BMC_CAP_SETTINGS_CMD: &str = "dcmi power get_limit";
 const BMC_SET_CAP_CMD: &str = "dcmi power set_limit limit";
@@ -73,15 +73,19 @@ impl BMC {
     ///
     /// # Panics
     /// The method will panic if the command fails to run
+    // TODO: This should also return a flag, indicating whether the command succeeded or failed
     fn run_command(&self, bmc_command: &str) -> String {
+
         // Concatenate command with the credentials
         let ipmi_args = format!("{self} {bmc_command}");
         trace!("BMC running command: {self:?} {bmc_command}");
+
         // process::Command requires arguments as an array
         let ipmi_args: Vec<&str> = ipmi_args.split_whitespace().collect();
+        let ipmi_path = &CONFIGURATION.ipmi;
 
         // Launch the command
-        match Command::new(IPMI_PATH).args(&ipmi_args).output() {
+        match Command::new(ipmi_path).args(&ipmi_args).output() {
             Ok(out) => {
                 let stdout = String::from_utf8_lossy(&out.stdout);
                 let stderr = String::from_utf8_lossy(&out.stderr);
@@ -95,13 +99,13 @@ impl BMC {
             Err(e) => {
                 error!(
                     "BMC Failed to execute command: {} {}: {:?}",
-                    IPMI_PATH,
+                    ipmi_path,
                     &ipmi_args.join(","),
                     e
                 );
                 panic!(
                     "BMC Can't run command: {} {}: {e:?}",
-                    IPMI_PATH,
+                    ipmi_path,
                     &ipmi_args.join(",")
                 );
             }

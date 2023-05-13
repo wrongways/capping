@@ -41,6 +41,8 @@ pub struct Configuration {
     pub driver_log_filename_prefix: String,
     pub monitor_poll_freq_hz: u64,
     pub test_timestamp: String,
+    pub firestarter: String,
+    pub ipmi: String,
 }
 
 impl Configuration {
@@ -63,6 +65,8 @@ impl Configuration {
             driver_log_filename_prefix: String::from(DRIVER_LOG_FILENAME_PREFIX),
             monitor_poll_freq_hz: MONITOR_POLL_FREQ_HZ,
             test_timestamp,
+            firestarter: args.firestarter,
+            ipmi: args.ipmi,
         }
     }
 }
@@ -124,4 +128,18 @@ struct CLI {
         help = "Directory to store runtime stats in"
     )]
     stats_dir: String,
+    #[arg(
+        long,
+        default_value = "/home_nfs/wainj/local/bin/firestarter",
+        name = "firestarter path",
+        help = "Path to firestarter executable (relative or absolute)"
+    )]
+    firestarter: String,
+    #[arg(
+        long,
+        default_value = "/usr/bin/ipmitool",
+        name = "ipmi path",
+        help = "Path to ipmi executable (relative or absolute)"
+    )]
+    ipmi: String,
 }

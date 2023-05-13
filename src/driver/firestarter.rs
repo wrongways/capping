@@ -1,8 +1,7 @@
 use log::{error, trace};
 use std::fmt::{self, Display, Formatter};
 use std::process::Command;
-
-const FIRESTARTER: &str = "/home_nfs/wainj/local/bin/firestarter";
+use crate::cli::CONFIGURATION;
 
 #[derive(Debug)]
 /// Hold the firestarter configuration
@@ -22,7 +21,7 @@ impl Firestarter {
         assert!(load_pct > 0 && load_pct <= 100);
         assert!(load_period_us == 0 || load_pct <= load_period_us);
         Self {
-            path: String::from(FIRESTARTER),
+            path: (*CONFIGURATION.firestarter).to_string(),
             runtime_secs,
             load_pct,
             load_period_us,

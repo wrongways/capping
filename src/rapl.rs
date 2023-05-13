@@ -108,6 +108,7 @@ impl RAPL {
             .expect("Didn't find a number after the first colon")
     }
 
+    // Are 64-bits enough here? u128 anybody?
     fn read_energy(path: &PathBuf) -> u64 {
         fs::read_to_string(path)
         .expect("Failed to read energy file")

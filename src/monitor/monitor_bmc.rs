@@ -56,8 +56,8 @@ pub fn monitor_bmc(rx: &Receiver<()>) {
     let thread_sleep_time_ms = max(0, (1000/CONFIGURATION.monitor_poll_freq_hz) - bmc_read_latency_estimate_ms);
 
     let runtime_estimate = (CONFIGURATION.warmup_secs + CONFIGURATION.test_time_secs) * 500;
-    // This code will only run on 64-bit hardware, cast to usize is safe
-    #[allow(clippy::cast_possible_truncation)]
+
+    #[allow(clippy::cast_possible_truncation)] // On 64-bit hardware, cast to usize is safe
     let mut stats = Vec::<BMC_Stats>::with_capacity(runtime_estimate as usize);
     let bmc = BMC::new(
         &CONFIGURATION.bmc_hostname,

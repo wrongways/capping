@@ -3,7 +3,7 @@ use crate::cli::CONFIGURATION;
 use crate::core_count;
 use crate::driver::firestarter::Firestarter;
 use crate::driver::{CappingOperation, CappingOrder};
-use chrono::{self, DateTime, Local};
+use chrono::{self, DateTime, Local, SecondsFormat};
 use log::{trace, info};
 use std::cmp::max;
 use std::fs::OpenOptions;
@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 use std::thread::{self, JoinHandle};
 use std::time::Duration;
 
-const INTER_TRIAL_WAIT_SECS: u64 = 1; // pause between each trial to delineate in the graphs.
+const INTER_TRIAL_WAIT_SECS: u64 = 2; // pause between each trial to delineate in the graphs.
 
 /// The test driver - for any given test configuration from `../driver.rs` launch a
 /// campaign of tests with diminishing load. In parallel the bmc and rapl monitors
@@ -77,6 +77,8 @@ impl Trial {
     }
 
     /// Setup the target system's capping configuration, ready for testing
+    // There is an assumption here that the server is under low load and these
+    // prepatory operations will succeed. Should be checked?
     fn set_initial_conditions(&self) {
         match self.capping_order {
             CappingOrder::LevelBeforeActivate => {
@@ -151,7 +153,7 @@ impl Trial {
         self.load_pct = load_pct;
         self.load_period_us = load_period_us;
         self.n_threads = n_threads;
-        trace!("\
+        info!("\
             Test scenario: load: {load_pct}, \
             load period µs: {load_period_us}, \
             n_threads: {n_threads}, \
@@ -214,7 +216,7 @@ impl Trial {
         // create a temporary BMC instance to move into thread
         let capping_bmc = BMC::new(&self.bmc.hostname, &self.bmc.username, &self.bmc.password);
 
-        // There is NO semicolon at the end of this lot, because this thread join handle is the
+        // There is NO semicolon at the end of this lot, because the thread join handle is the
         // return value to the do_cap_operation method. The thread itself returns its own runtime duration
         thread::spawn(move || {
             let cap_start_time = Local::now();
@@ -259,9 +261,9 @@ impl Trial {
         writeln!(
             log_file,
             "{},{},{},{},{},{},{},{},{},{},{},{}",
-            self.start_time.to_rfc3339(),
-            self.end_time.to_rfc3339(),
-            self.cap_request_time.to_rfc3339(),
+            self.start_time.to_rfc3339_opts(SecondsFormat::Secs, true),
+            self.end_time.to_rfc3339_opts(SecondsFormat::Secs, true),
+            self.cap_request_time.to_rfc3339_opts(SecondsFormat::Secs, true),
             self.capping_thread_did_complete,
             self.time_to_cap.num_milliseconds(),
             self.load_pct,

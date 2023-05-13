@@ -85,41 +85,48 @@ struct CLI {
     // Passing default values here for the tests - to to deleted
     #[arg(long, short = 'H', name = "host")]
     bmc_hostname: String,
+
     #[arg(long, short = 'U', name = "user")]
     bmc_username: String,
+
     #[arg(long, short = 'P', name = "password")]
     bmc_password: String,
+
     #[arg(
         long,
-        default_value_t = 3,
+        default_value_t = 5,
         name = "warmup seconds",
         help = "Number of seconds to warm up before applying cap"
     )]
     warmup: u64,
+
     #[arg(
         long,
         short,
-        default_value_t = 7,
+        default_value_t = 5,
         name = "test time seconds",
         help = "Number of seconds to wait after applying a cap before testing if cap has been applied. "
     )]
     test_time: u64,
+
     #[arg(
         long = "cap_low",
         short = 'w',
-        default_value_t = 600,
+        default_value_t = 440,
         name = "low watts",
         help = "Number of Watts for setting a low cap"
     )]
     cap_low_watts: u64,
+
     #[arg(
         long = "cap_high",
         short = 'W',
-        default_value_t = 2000,
+        default_value_t = 550,
         name = "high watts",
         help = "Number of Watts for setting a high cap, used before setting a low cap"
     )]
     cap_high_watts: u64,
+
     #[arg(
         long,
         short,
@@ -128,6 +135,7 @@ struct CLI {
         help = "Directory to store runtime stats in"
     )]
     stats_dir: String,
+
     #[arg(
         long,
         default_value = "/home_nfs/wainj/local/bin/firestarter",
@@ -135,6 +143,7 @@ struct CLI {
         help = "Path to firestarter executable (relative or absolute)"
     )]
     firestarter: String,
+
     #[arg(
         long,
         default_value = "/usr/bin/ipmitool",

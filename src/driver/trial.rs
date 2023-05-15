@@ -271,9 +271,9 @@ impl Trial {
         writeln!(
             log_file,
             "{},{},{},{},{},{},{},{},{},{},{},{}",
-            self.start_time.to_rfc3339_opts(SecondsFormat::Secs, true),
-            self.end_time.to_rfc3339_opts(SecondsFormat::Secs, true),
-            self.cap_request_time.to_rfc3339_opts(SecondsFormat::Secs, true),
+            self.start_time.to_rfc3339_opts(SecondsFormat::Secs, false),
+            self.end_time.to_rfc3339_opts(SecondsFormat::Secs, false),
+            self.cap_request_time.to_rfc3339_opts(SecondsFormat::Secs, false),
             self.capping_thread_did_complete,
             self.time_to_cap.num_milliseconds(),
             self.load_pct,

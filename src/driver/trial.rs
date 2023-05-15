@@ -13,6 +13,7 @@ use std::thread::{self, JoinHandle};
 use std::time::Duration;
 
 const INTER_TRIAL_WAIT_SECS: u64 = 2; // pause between each trial to delineate in the graphs.
+const SETUP_PAUSE_SECS: u64 = 2;
 
 /// The test driver - for any given test configuration from `../driver.rs` launch a
 /// campaign of tests with diminishing load. In parallel the bmc and rapl monitors
@@ -77,9 +78,13 @@ impl Trial {
     }
 
     /// Setup the target system's capping configuration, ready for testing
+    /// # Arguments
+    /// * - sleep_secs: give some time for the capping conditions to be applied
+    ///     prior to launching the test
     // There is an assumption here that the server is under low load and these
     // prepatory operations will succeed. Should be checked?
-    fn set_initial_conditions(&self) {
+
+    fn set_initial_conditions(&self, sleep_secs: u64) {
         match self.capping_order {
             CappingOrder::LevelBeforeActivate => {
                 // Set the level to the "cap_to" value, and the
@@ -102,6 +107,11 @@ impl Trial {
                 }
             }
         }
+
+        // Pause for a moment to allow initial conditions to be applied
+        if sleep_secs > 0 {
+            thread::sleep(Duration::from_secs(sleep_secs));
+        }
     }
 
     /// Combines two of the diminishing load techniques: decrease average load and
@@ -109,7 +119,7 @@ impl Trial {
     /// the wall-clock idle period).
     fn run_decreasing_load(&mut self) {
         trace!("Running decreasing load");
-        self.set_initial_conditions();
+        self.set_initial_conditions(SETUP_PAUSE_SECS);
         // because Rust doesn't have decreasing ranges, have to jump through hoops...
         let n_threads = 0; // firestarter will use all available threads
         for idle_pct in 0..=20 {
@@ -124,7 +134,7 @@ impl Trial {
     /// Decrease the number of active threads. Each active thread runs at full load.
     fn run_decreasing_threads(&mut self) {
         trace!("Running decreasing threads");
-        self.set_initial_conditions();
+        self.set_initial_conditions(SETUP_PAUSE_SECS);
         let load_pct = 100;
         let load_period = 0;
         let core_count = core_count();

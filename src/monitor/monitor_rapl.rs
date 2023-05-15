@@ -1,6 +1,7 @@
 use crate::cli::CONFIGURATION;
 use crate::rapl::{RAPL_Readings, RAPL_Reading, RAPL};
 use crate::ResultType;
+use chrono::SecondsFormat;
 use log::debug;
 use log::{info, trace};
 use std::fs::File;
@@ -61,7 +62,10 @@ fn save_rapl_stats(stats: &[RAPL_Readings]) -> ResultType<PathBuf> {
     // normalized form, ready to be loaded into a database)
     for datapoint in convert_energy_to_power(stats) {
         for reading in datapoint.readings {
-            writeln!(&mut writer, "{},{},{}", datapoint.timestamp, reading.domain, reading.reading)?;
+            writeln!(&mut writer, "{},{},{}",
+                datapoint.timestamp.to_rfc3339_opts(SecondsFormat::Millis, false),
+                reading.domain,
+                reading.reading)?;
         }
     }
 

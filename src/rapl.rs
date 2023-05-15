@@ -158,7 +158,7 @@ impl Display for RAPL_Readings {
         write!(
             f,
             "{},{}",
-            self.timestamp.to_rfc3339_opts(SecondsFormat::Millis, true),
+            self.timestamp.to_rfc3339_opts(SecondsFormat::Millis, false),
             readings
         )
     }

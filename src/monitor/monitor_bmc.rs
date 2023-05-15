@@ -26,7 +26,7 @@ impl fmt::Display for BMC_Stats {
         write!(
             f,
             "{},{},{},{}",
-            self.timestamp.to_rfc3339_opts(SecondsFormat::Millis, true),
+            self.timestamp.to_rfc3339_opts(SecondsFormat::Millis, false),
             self.power,
             self.cap_level,
             self.cap_is_active,

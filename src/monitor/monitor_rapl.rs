@@ -17,7 +17,7 @@ use std::time::Duration;
 pub fn monitor_rapl(rx: &Receiver<()>) {
     info!("\tRAPL: launched");
     let runtime_estimate = (CONFIGURATION.warmup_secs + CONFIGURATION.test_time_secs) * 500;
-    // This code will only run on 64-bit hardware, cast to usize is safe
+    // On 64-bit hardware, cast to usize is safe
     #[allow(clippy::cast_possible_truncation)]
     let mut stats = Vec::<RAPL_Readings>::with_capacity(runtime_estimate as usize);
     let rapl = RAPL::new();
@@ -57,7 +57,7 @@ fn save_rapl_stats(stats: &[RAPL_Readings]) -> ResultType<PathBuf> {
     writeln!(&mut writer, "{csv_header}")?;
 
     // Rather than recording the raw energy values, calculate the power for each domain
-    // One row per timestamp/domain (makes it harder to sum total power, but it's in a
+    // One row per timestamp per domain (makes it harder to sum total power, but it's in a
     // normalized form, ready to be loaded into a database)
     for datapoint in convert_energy_to_power(stats) {
         for reading in datapoint.readings {

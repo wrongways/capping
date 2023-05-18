@@ -12,6 +12,7 @@ use std::thread;
 use std::time::Duration;
 
 
+
 /// Periodically reads all the `energy_uj` files and saves the result. Runs on its own thread.
 /// Each time through the loop, checks for a message from the main monitor thread that signals
 /// that this thread can exit. Before exiting, saves results to CSV file.
@@ -86,6 +87,9 @@ fn convert_energy_to_power(stats: &[RAPL_Readings]) -> Vec<RAPL_Readings> {
     // the time delta for each RAPL domain. The total power is
     // the sum of the domains.
 
+    // need to check for wrap-around - keep tabs on max_energy_uj and previous reading
+    let max_energy_uj = RAPL::max_energy();
+
     // By using skip(1), the index from the enumerate is one behind the
     // current row, i.e. it points to the preceding row, which is exactly
     // what's needed to calculate the deltas.
@@ -97,7 +101,18 @@ fn convert_energy_to_power(stats: &[RAPL_Readings]) -> Vec<RAPL_Readings> {
 
         // Loop over the domains
         for (domain_index, reading) in stat.readings.iter().enumerate() {
-            let energy_delta_uj = reading.reading - stats[stat_index].readings[domain_index].reading;
+            let previous_reading = stats[stat_index].readings[domain_index].reading;
+            let current_reading = reading.reading;
+
+            // check for wrap-around
+            let energy_delta_uj = {
+                if current_reading < previous_reading {
+                    max_energy_uj - previous_reading + current_reading // wrapped
+                } else {
+                    current_reading - previous_reading // no wrap
+                }
+            };
+
             // time delta is always positive so no loss of sign - and in any case makes no difference
             #[allow(clippy::cast_sign_loss)]
             let power_watts = energy_delta_uj / time_delta.num_milliseconds() as u64;
@@ -111,6 +126,7 @@ fn convert_energy_to_power(stats: &[RAPL_Readings]) -> Vec<RAPL_Readings> {
     }
     readings
 }
+
 
 #[cfg(test)]
 mod tests {

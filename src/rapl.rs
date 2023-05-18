@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 // is that sub-domain 0 is the processor core. A more rigorous approach would read
 // the name of each sub-domain to identify each part. For future work perhaps?
 const RAPL_GLOB: &str = "/sys/devices/virtual/powercap/intel-rapl/intel-rapl:*";
-
+const MAX_ENERGY_PATH: &str ="/sys/devices/virtual/powercap/intel-rapl/intel-rapl:0/max_energy_range_uj";
 
 
 // Holds the concrete (non-globbed) RAPL paths
@@ -108,13 +108,30 @@ impl RAPL {
             .expect("Didn't find a number after the first colon")
     }
 
-    // Are 64-bits enough here? u128 anybody?
+    // 64-bits are enough - max energy typically in 36-bits
     fn read_energy(path: &PathBuf) -> u64 {
         fs::read_to_string(path)
         .expect("Failed to read energy file")
         .trim()
         .parse()
         .expect("Failed to parse energy reading")
+    }
+
+    pub fn max_energy() -> u64 {
+        // The energy counters wrap-around on reaching max energy
+        // this happens sufficiently frequently (typically 5-10 minutes)
+        // that it has to be handled. The wrap-around value is provided
+        // in the max-energy file. This routine reads and returns that value.
+
+        fs::read_to_string(MAX_ENERGY_PATH)
+            .expect("Failed to read max energy file")
+            .trim()
+            .parse()
+            .expect("Failed to parse max energy reading")
+    }
+
+    pub fn domain_count() -> u64 {
+        glob(RAPL_GLOB).expect("RAPL failed to glob directory").count() as u64
     }
 }
 

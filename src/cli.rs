@@ -5,7 +5,7 @@ use chrono::Local;
 const BMC_STATS_FILENAME_PREFIX: &str = "bmc_stats";
 const RAPL_STATS_FILENAME_PREFIX: &str = "rapl_stats";
 const DRIVER_LOG_FILENAME_PREFIX: &str = "driver_log";
-const MONITOR_POLL_FREQ_HZ: u64 = 2;
+const MONITOR_POLL_FREQ_HZ: u64 = 4;
 
 lazy_static! {
     /*

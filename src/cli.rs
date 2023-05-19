@@ -94,7 +94,7 @@ struct CLI {
 
     #[arg(
         long,
-        default_value_t = 5,
+        default_value_t = 15,
         name = "warmup seconds",
         help = "Number of seconds to warm up before applying cap"
     )]
@@ -103,7 +103,7 @@ struct CLI {
     #[arg(
         long,
         short,
-        default_value_t = 5,
+        default_value_t = 30,
         name = "test time seconds",
         help = "Number of seconds to wait after applying a cap before testing if cap has been applied. "
     )]
@@ -112,7 +112,7 @@ struct CLI {
     #[arg(
         long = "cap_low",
         short = 'w',
-        default_value_t = 440,
+        default_value_t = 400,
         name = "low watts",
         help = "Number of Watts for setting a low cap"
     )]
@@ -121,7 +121,7 @@ struct CLI {
     #[arg(
         long = "cap_high",
         short = 'W',
-        default_value_t = 550,
+        default_value_t = 580,
         name = "high watts",
         help = "Number of Watts for setting a high cap, used before setting a low cap"
     )]

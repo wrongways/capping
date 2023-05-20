@@ -9,7 +9,7 @@ use std::cmp::max;
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::{Path, PathBuf};
-use std::thread::{self, JoinHandle};
+use std::thread;
 use std::time::Duration;
 
 const INTER_TRIAL_WAIT_SECS: u64 = 2; // pause between each trial to delineate in the graphs.
@@ -183,31 +183,8 @@ impl Trial {
         thread::sleep(Duration::from_secs(self.warmup_secs));
 
         self.cap_request_time = Local::now();
-        let cap_thread = self.do_cap_operation();
-
-        // check to see if capping thread has returned
-        //
-        // Using Futures would be a more satisfactory approach but bringing in a whole new
-        // runtime, having an async main and all the additional complexity seems like a lot
-        // of trouble for this single, simple case.
-        //
-        // An alternative technique would be to cap in the main thread, suspending until completion
-        // but then need to manage the case where the capping operation overruns the end of the
-        // firestarter load.
-        let sleep_millis = 250;
-        for _ in 0..(CONFIGURATION.test_time_secs * 1000 / sleep_millis) {
-            thread::sleep(Duration::from_millis(sleep_millis));
-            if cap_thread.is_finished() {
-                self.capping_thread_did_complete = true;
-                // capping thread returns its runtime as a Duration
-                self.time_to_cap = cap_thread.join().expect("Failed to join capping thread");
-                break;
-            }
-        }
-
-        // TODO: check if capping worked by comparing power just before
-        // firestarter exits to the initial_load_power above. If capping worked
-        // can do an early exit the trial
+        self.do_cap_operation();
+        self.time_to_cap =  Local::now() - self.cap_request_time;
 
         // wait for firestarter to exit
         fire_starter_thread.join().unwrap();
@@ -216,38 +193,26 @@ impl Trial {
         self.log_results().expect("Failed to write driver log entry");
     }
 
-    /// Launch a separate thread with a request to the BMC to perform the capping action
-    fn do_cap_operation(&self) -> JoinHandle<chrono::Duration> {
-        // get local copies of properties to move into the thread closure
-        let cap_to = self.cap_to;
+    /// Perform the capping action
+    fn do_cap_operation(&self)  {
         let capping_order = self.capping_order;
         let capping_operation = self.capping_operation;
 
-        // create a temporary BMC instance to move into thread
-        let capping_bmc = BMC::new(&self.bmc.hostname, &self.bmc.username, &self.bmc.password);
-
-        // There is NO semicolon at the end of this lot, because the thread join handle is the
-        // return value to the do_cap_operation method. The thread itself returns its own runtime duration
-        thread::spawn(move || {
-            let cap_start_time = Local::now();
-            match capping_order {
-                CappingOrder::LevelBeforeActivate => {
-                    // The capping level is set by set_initial_conditions
-                    // just need to perform the operation
-                    match capping_operation {
-                        CappingOperation::Activate => capping_bmc.activate_power_cap(),
-                        CappingOperation::Deactivate => capping_bmc.deactivate_power_cap(),
-                    }
-                }
-                CappingOrder::LevelAfterActivate => {
-                    // The main driver ensures that the capping operation is "Activate"
-                    // as there's no sense in setting a cap when capping is deactivated
-                    capping_bmc.set_cap_power_level(cap_to);
+        match capping_order {
+            CappingOrder::LevelBeforeActivate => {
+                // The capping level is set by set_initial_conditions
+                // just need to perform the operation
+                match capping_operation {
+                    CappingOperation::Activate => self.bmc.activate_power_cap(),
+                    CappingOperation::Deactivate => self.bmc.deactivate_power_cap(),
                 }
             }
-            // Thread returns its execution time
-            Local::now() - cap_start_time
-        })
+            CappingOrder::LevelAfterActivate => {
+                // The main driver ensures that the capping operation is "Activate"
+                // as there's no sense in setting a cap when capping is deactivated
+                self.bmc.set_cap_power_level(self.cap_to);
+            }
+        }
     }
 
     fn log_results(&self) -> Result<(), std::io::Error>  {

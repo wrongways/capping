@@ -94,7 +94,7 @@ impl BMC {
                     error!("BMC run_command({bmc_command}) stderr: {stderr}");
                 }
 
-                String::from(stdout)
+                stdout.to_string()
             }
             Err(e) => {
                 error!(

@@ -2,7 +2,7 @@ use crate::bmc::{BMC, BMC_CapSetting};
 use crate::cli::CONFIGURATION;
 use crate::ResultType;
 use log::{info, trace, debug};
-use std::cmp::max;
+// use std::cmp::max;
 use std::fmt;
 use std::fs::File;
 use std::io::{BufWriter, Write};

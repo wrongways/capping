@@ -52,8 +52,9 @@ pub fn monitor_bmc(rx: &Receiver<()>) {
     info!("\tBMC: launched");
 
     // An estimate of how long it takes to read the dcmi power values from the BMC
-    let bmc_read_latency_estimate_ms: u64 = 250;
-    let thread_sleep_time_ms = max(0, (1000/CONFIGURATION.monitor_poll_freq_hz) - bmc_read_latency_estimate_ms);
+    // let bmc_read_latency_estimate_ms: u64 = 250;
+    // let thread_sleep_time_ms = max(0, (1000/CONFIGURATION.monitor_poll_freq_hz) - bmc_read_latency_estimate_ms);
+    let thread_sleep_time_ms = 2000;
 
     let runtime_estimate = (CONFIGURATION.warmup_secs + CONFIGURATION.test_time_secs) * 500;
 

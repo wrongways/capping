@@ -91,7 +91,7 @@ impl BMC {
                 let stderr = String::from_utf8_lossy(&out.stderr);
 
                 if stderr.len() > 0 {
-                    error!("BMC run_command() stderr: {stderr}");
+                    error!("BMC run_command({bmc_command}) stderr: {stderr}");
                 }
 
                 String::from(stdout)

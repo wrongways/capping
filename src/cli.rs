@@ -103,7 +103,7 @@ struct CLI {
     #[arg(
         long,
         short,
-        default_value_t = 30,
+        default_value_t = 20,
         name = "test time seconds",
         help = "Number of seconds to wait after applying a cap before testing if cap has been applied. "
     )]

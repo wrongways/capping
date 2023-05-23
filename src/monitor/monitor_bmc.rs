@@ -2,7 +2,6 @@ use crate::bmc::{BMC, BMC_CapSetting};
 use crate::cli::CONFIGURATION;
 use crate::ResultType;
 use log::{info, trace, debug};
-// use std::cmp::max;
 use std::fmt;
 use std::fs::File;
 use std::io::{BufWriter, Write};
@@ -11,6 +10,9 @@ use std::sync::mpsc::Receiver;
 use std::thread;
 use std::time::Duration;
 use chrono::{DateTime, Local, SecondsFormat};
+
+const BMC_INTER_COMMAND_SLEEP_MILLIS: u64 = 500;
+const BMC_POLL_INTERVAL_MILLIS: u64 = 3000;
 
 #[allow(non_camel_case_types)]
 #[derive(Debug)]
@@ -51,10 +53,7 @@ impl BMC_Stats {
 pub fn monitor_bmc(rx: &Receiver<()>) {
     info!("\tBMC: launched");
 
-    // An estimate of how long it takes to read the dcmi power values from the BMC
-    // let bmc_read_latency_estimate_ms: u64 = 250;
-    // let thread_sleep_time_ms = max(0, (1000/CONFIGURATION.monitor_poll_freq_hz) - bmc_read_latency_estimate_ms);
-    let thread_sleep_time_ms = 2000;
+    let thread_sleep_time_ms = BMC_POLL_INTERVAL_MILLIS;
 
     let runtime_estimate = (CONFIGURATION.warmup_secs + CONFIGURATION.test_time_secs) * 500;
 
@@ -74,6 +73,7 @@ pub fn monitor_bmc(rx: &Receiver<()>) {
 
         // No message, read current power and capping status
         let current_power = bmc.current_power();
+        thread::sleep(Duration::from_millis(BMC_INTER_COMMAND_SLEEP_MILLIS));
         let current_cap_settings = bmc.current_cap_settings();
         let reading = BMC_Stats::new(current_power, &current_cap_settings);
 

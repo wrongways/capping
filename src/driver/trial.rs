@@ -12,8 +12,8 @@ use std::path::{Path, PathBuf};
 use std::thread;
 use std::time::Duration;
 
-const INTER_TRIAL_WAIT_SECS: u64 = 3; // pause between each trial to delineate in the graphs.
-const SETUP_PAUSE_SECS: u64 = 4;
+const INTER_TRIAL_WAIT_SECS: u64 = 3; // pause between each trial - cool-down.
+const SETUP_PAUSE_SECS: u64 = 4;    // Pause between issuing bmc commands in set_initial_conditions()
 
 /// The test driver - for any given test configuration from `../driver.rs` launch a
 /// campaign of tests with diminishing load. In parallel the bmc and rapl monitors
@@ -84,34 +84,43 @@ impl Trial {
     // There is an assumption here that the server is under low load and these
     // prepatory operations will succeed. Should be checked?
 
-    fn set_initial_conditions(&self, sleep_secs: u64) {
+    fn set_initial_conditions(&self) {
+        let repeat_count = 1;
         match self.capping_order {
             CappingOrder::LevelBeforeActivate => {
                 // Set the level to the "cap_to" value, and the
                 // capping activation to the opposite of the test
-                self.bmc.set_cap_power_level(self.cap_to);
+                //
+                // Reapeat the commands as they don't always seem to be taken into account
+                for _ in 0..repeat_count {
+                    self.bmc.set_cap_power_level(self.cap_to);
+                    thread::sleep(Duration::from_secs(SETUP_PAUSE_SECS));
+                }
 
-                match self.capping_operation {
-                    CappingOperation::Activate => self.bmc.deactivate_power_cap(),
-                    CappingOperation::Deactivate => self.bmc.activate_power_cap(),
+                for _ in 0..repeat_count {
+                    match self.capping_operation {
+                        CappingOperation::Activate => self.bmc.deactivate_power_cap(),
+                        CappingOperation::Deactivate => self.bmc.activate_power_cap(),
+                    };
+                    thread::sleep(Duration::from_secs(SETUP_PAUSE_SECS))
                 }
             }
             CappingOrder::LevelAfterActivate => {
                 // set the capping level to the "cap_from" value
                 // and the capping activation to the value for the test
-                self.bmc.set_cap_power_level(self.cap_from);
-
-                match self.capping_operation {
-                    CappingOperation::Activate => self.bmc.activate_power_cap(),
-                    CappingOperation::Deactivate => self.bmc.deactivate_power_cap(),
+                for _ in 0..repeat_count {
+                    self.bmc.set_cap_power_level(self.cap_from);
+                    thread::sleep(Duration::from_secs(SETUP_PAUSE_SECS));
+                }
+                for _ in 0..repeat_count {
+                    match self.capping_operation {
+                        CappingOperation::Activate => self.bmc.activate_power_cap(),
+                        CappingOperation::Deactivate => self.bmc.deactivate_power_cap(),
+                    }
+                    thread::sleep(Duration::from_secs(SETUP_PAUSE_SECS));
                 }
             }
-        }
-
-        // Pause for a moment to allow initial conditions to be applied
-        if sleep_secs > 0 {
-            thread::sleep(Duration::from_secs(sleep_secs));
-        }
+        };
     }
 
     /// Combines two of the diminishing load techniques: decrease average load and
@@ -119,7 +128,7 @@ impl Trial {
     /// the wall-clock idle period).
     fn run_decreasing_load(&mut self) {
         trace!("Running decreasing load");
-        self.set_initial_conditions(SETUP_PAUSE_SECS);
+        self.set_initial_conditions();
         // because Rust doesn't have decreasing ranges, have to jump through hoops...
         let n_threads = 0; // firestarter will use all available threads
         for idle_pct in 0..=25 {
@@ -134,7 +143,7 @@ impl Trial {
     /// Decrease the number of active threads. Each active thread runs at full load.
     fn run_decreasing_threads(&mut self) {
         trace!("Running decreasing threads");
-        self.set_initial_conditions(SETUP_PAUSE_SECS);
+        self.set_initial_conditions();
         let load_pct = 100;
         let load_period = 0;
         let core_count = core_count();

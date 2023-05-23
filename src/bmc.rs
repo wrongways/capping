@@ -209,7 +209,7 @@ impl BMC {
         // The routine matches on the first word of the key and calls the appropriate
         // parser to convert the value into its natural type (from a string).
         for line in &mut output.lines() {
-            // Can't use a simple colon (:) for the split here because of the date string
+            // Can't use a simple colon (:) for the split here because of the timestamp date string
             let parts: Vec<&str> = line.trim().split(": ").collect();
 
             // skip empty lines by checking # parts
@@ -245,7 +245,7 @@ impl BMC {
             let parts: Vec<&str> = line.trim().split(':').collect();
             if parts.len() == 2 {
                 let (lhs, rhs) = (parts[0], parts[1]);
-                match lhs {
+                match lhs.trim() {
                     "Current Limit State" => is_active = rhs.trim() == "Power Limit Active",
                     "Power Limit" => power_limit = BMC::parse_number(rhs),
                     _ => continue,

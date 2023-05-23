@@ -13,7 +13,7 @@ use std::thread;
 use std::time::Duration;
 
 const INTER_TRIAL_WAIT_SECS: u64 = 3; // pause between each trial - cool-down.
-const SETUP_PAUSE_SECS: u64 = 4;    // Pause between issuing bmc commands in set_initial_conditions()
+const SETUP_PAUSE_SECS: u64 = 1;    // Pause between issuing bmc commands in set_initial_conditions()
 
 /// The test driver - for any given test configuration from `../driver.rs` launch a
 /// campaign of tests with diminishing load. In parallel the bmc and rapl monitors
@@ -85,51 +85,40 @@ impl Trial {
     // prepatory operations will succeed. Should be checked?
 
     fn set_initial_conditions(&self) {
-        let repeat_count = 1;
         match self.capping_order {
             CappingOrder::LevelBeforeActivate => {
                 // Set the level to the "cap_to" value, and the
                 // capping activation to the opposite of the test
                 //
                 // Reapeat the commands as they don't always seem to be taken into account
-                for _ in 0..repeat_count {
-                    self.bmc.set_cap_power_level(self.cap_to);
-                    thread::sleep(Duration::from_secs(SETUP_PAUSE_SECS));
-                }
 
-                for _ in 0..repeat_count {
-                    match self.capping_operation {
-                        CappingOperation::Activate => self.bmc.deactivate_power_cap(),
-                        CappingOperation::Deactivate => self.bmc.activate_power_cap(),
-                    };
-                    thread::sleep(Duration::from_secs(SETUP_PAUSE_SECS))
-                }
+                self.bmc.set_cap_power_level(self.cap_to);
+                thread::sleep(Duration::from_secs(SETUP_PAUSE_SECS));
+
+                match self.capping_operation {
+                    CappingOperation::Activate => self.bmc.deactivate_power_cap(),
+                    CappingOperation::Deactivate => self.bmc.activate_power_cap(),
+                };
             }
             CappingOrder::LevelAfterActivate => {
                 // set the capping level to the "cap_from" value
                 // and the capping activation to the value for the test
-                for _ in 0..repeat_count {
-                    self.bmc.set_cap_power_level(self.cap_from);
-                    thread::sleep(Duration::from_secs(SETUP_PAUSE_SECS));
-                }
-                for _ in 0..repeat_count {
-                    match self.capping_operation {
-                        CappingOperation::Activate => self.bmc.activate_power_cap(),
-                        CappingOperation::Deactivate => self.bmc.deactivate_power_cap(),
-                    }
-                    thread::sleep(Duration::from_secs(SETUP_PAUSE_SECS));
+                self.bmc.set_cap_power_level(self.cap_from);
+                thread::sleep(Duration::from_secs(SETUP_PAUSE_SECS));
+
+                match self.capping_operation {
+                    CappingOperation::Activate => self.bmc.activate_power_cap(),
+                    CappingOperation::Deactivate => self.bmc.deactivate_power_cap(),
                 }
             }
             CappingOrder::LevelToLevel => {
                 // set cap level and activate capping
-                for _ in 0..repeat_count {
-                    self.bmc.set_cap_power_level(self.cap_from);
-                    thread::sleep(Duration::from_secs(SETUP_PAUSE_SECS));
-                    self.bmc.activate_power_cap();
-                    thread::sleep(Duration::from_secs(SETUP_PAUSE_SECS));
-                }
+                self.bmc.set_cap_power_level(self.cap_from);
+                thread::sleep(Duration::from_secs(SETUP_PAUSE_SECS));
+                self.bmc.activate_power_cap();
             }
         };
+        thread::sleep(Duration::from_secs(SETUP_PAUSE_SECS));
     }
 
     /// Combines two of the diminishing load techniques: decrease average load and
@@ -137,12 +126,13 @@ impl Trial {
     /// the wall-clock idle period).
     fn run_decreasing_load(&mut self) {
         trace!("Running decreasing load");
-        self.set_initial_conditions();
+
         // because Rust doesn't have decreasing ranges, have to jump through hoops...
         let n_threads = 0; // firestarter will use all available threads
         for idle_pct in 0..=25 {
             let load_pct = 100 - idle_pct;
             for load_period_us in [10_000, 100_000, 1_000_000] {
+                self.set_initial_conditions();
                 self.run_test_scenario(load_pct, load_period_us, n_threads);
                 thread::sleep(Duration::from_secs(INTER_TRIAL_WAIT_SECS));
             }
@@ -152,7 +142,7 @@ impl Trial {
     /// Decrease the number of active threads. Each active thread runs at full load.
     fn run_decreasing_threads(&mut self) {
         trace!("Running decreasing threads");
-        self.set_initial_conditions();
+
         let load_pct = 100;
         let load_period = 0;
         let core_count = core_count();
@@ -165,6 +155,7 @@ impl Trial {
 
             let max_idle_threads = max(1, core_count / 4);
             for idle_threads in 0..=max_idle_threads {
+                self.set_initial_conditions();
                 self.run_test_scenario(load_pct, load_period, core_count - idle_threads);
                 thread::sleep(Duration::from_secs(INTER_TRIAL_WAIT_SECS));
             }

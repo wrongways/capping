@@ -120,6 +120,15 @@ impl Trial {
                     thread::sleep(Duration::from_secs(SETUP_PAUSE_SECS));
                 }
             }
+            CappingOrder::LevelToLevel => {
+                // set cap level and activate capping
+                for _ in 0..repeat_count {
+                    self.bmc.set_cap_power_level(self.cap_from);
+                    thread::sleep(Duration::from_secs(SETUP_PAUSE_SECS));
+                    self.bmc.activate_power_cap();
+                    thread::sleep(Duration::from_secs(SETUP_PAUSE_SECS));
+                }
+            }
         };
     }
 
@@ -216,9 +225,7 @@ impl Trial {
                     CappingOperation::Deactivate => self.bmc.deactivate_power_cap(),
                 }
             }
-            CappingOrder::LevelAfterActivate => {
-                // The main driver ensures that the capping operation is "Activate"
-                // as there's no sense in setting a cap when capping is deactivated
+            CappingOrder::LevelAfterActivate | CappingOrder::LevelToLevel => {
                 self.bmc.set_cap_power_level(self.cap_to);
             }
         }

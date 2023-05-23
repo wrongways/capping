@@ -7,6 +7,7 @@ use crate::cli::CONFIGURATION;
 pub enum CappingOrder {
     LevelBeforeActivate,
     LevelAfterActivate,
+    LevelToLevel,
 }
 
 impl Display for CappingOrder {
@@ -15,6 +16,7 @@ impl Display for CappingOrder {
             match self {
                 Self::LevelBeforeActivate => "LevelBeforeActivate",
                 Self::LevelAfterActivate => "LevelAfterActivate",
+                Self::LevelToLevel => "LevelToLevel",
             }
         )
     }
@@ -71,6 +73,7 @@ impl Driver {
             for capping_order in [
                 CappingOrder::LevelBeforeActivate,
                 CappingOrder::LevelAfterActivate,
+                CappingOrder::LevelToLevel,
             ] {
                 for operation in [CappingOperation::Activate, CappingOperation::Deactivate] {
                     // No sense in running Level after Activate when operation is Deactivate

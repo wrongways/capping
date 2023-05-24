@@ -23,7 +23,6 @@ pub fn monitor(rx: &Receiver<()>) {
     let rapl_thread = thread::spawn(move || monitor_rapl::monitor_rapl(&rapl_rx));
     let bmc_thread = thread::spawn(move || monitor_bmc::monitor_bmc(&bmc_rx));
 
-    trace!("MONITOR: threads launched waiting for exit message from main");
     rx.recv()
         .expect("Monitor driver failed to receive message from main thread");
 

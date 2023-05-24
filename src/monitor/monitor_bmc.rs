@@ -12,7 +12,7 @@ use std::time::Duration;
 use chrono::{DateTime, Local, SecondsFormat};
 
 const BMC_INTER_COMMAND_SLEEP_MILLIS: u64 = 500;
-const BMC_POLL_INTERVAL_MILLIS: u64 = 3000;
+const BMC_POLL_INTERVAL_MILLIS: u64 = 500;
 
 #[allow(non_camel_case_types)]
 #[derive(Debug)]

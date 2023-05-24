@@ -94,7 +94,7 @@ struct CLI {
 
     #[arg(
         long,
-        default_value_t = 15,
+        default_value_t = 10,
         name = "warmup seconds",
         help = "Number of seconds to warm up before applying cap"
     )]
@@ -103,7 +103,7 @@ struct CLI {
     #[arg(
         long,
         short,
-        default_value_t = 20,
+        default_value_t = 15,
         name = "test time seconds",
         help = "Number of seconds to wait after applying a cap before testing if cap has been applied. "
     )]

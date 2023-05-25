@@ -150,10 +150,10 @@ impl Trial {
         // As rust _still_ doesn't have decreasing ranges, jump through more hoops
         if core_count > 1 {
             // TODO: Could probably have a better algorithm here - if you've got 128
-            //       cores, then maybe don't have to run this 17 times to get a result.
+            //       cores, then maybe don't have to run this 14 times to get a result.
             //       but then again, maybe you do.
 
-            let max_idle_threads = max(1, core_count / 4);
+            let max_idle_threads = max(1, core_count / 10);
             for idle_threads in 0..=max_idle_threads {
                 self.set_initial_conditions();
                 self.run_test_scenario(load_pct, load_period, core_count - idle_threads);

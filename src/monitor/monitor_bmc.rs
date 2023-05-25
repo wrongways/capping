@@ -55,10 +55,7 @@ pub fn monitor_bmc(rx: &Receiver<()>) {
 
     let thread_sleep_time_ms = BMC_POLL_INTERVAL_MILLIS;
 
-    let runtime_estimate = (CONFIGURATION.warmup_secs + CONFIGURATION.test_time_secs) * 500;
-
-    #[allow(clippy::cast_possible_truncation)] // On 64-bit hardware, cast to usize is safe
-    let mut stats = Vec::<BMC_Stats>::with_capacity(runtime_estimate as usize);
+    let mut stats = Vec::<BMC_Stats>::new();
     let bmc = BMC::new(
         &CONFIGURATION.bmc_hostname,
         &CONFIGURATION.bmc_username,

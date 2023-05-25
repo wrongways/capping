@@ -18,10 +18,8 @@ use std::time::Duration;
 /// that this thread can exit. Before exiting, saves results to CSV file.
 pub fn monitor_rapl(rx: &Receiver<()>) {
     info!("\tRAPL: launched");
-    let runtime_estimate = (CONFIGURATION.warmup_secs + CONFIGURATION.test_time_secs) * 500;
-    // On 64-bit hardware, cast to usize is safe
-    #[allow(clippy::cast_possible_truncation)]
-    let mut stats = Vec::<RAPL_Readings>::with_capacity(runtime_estimate as usize);
+
+    let mut stats = Vec::<RAPL_Readings>::new();
     let rapl = RAPL::new();
     let sleep_millis = 1000/CONFIGURATION.monitor_poll_freq_hz;
     loop {
